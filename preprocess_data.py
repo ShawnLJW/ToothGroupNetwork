@@ -3,6 +3,7 @@ import os
 import numpy as np
 from glob import glob
 import gen_utils as gu
+import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--source_obj_data_path', default="G:/tooth_seg/main/all_datas/chl/3D_scans_per_patient_obj_files", type=str, help="data path in which original .obj data are saved")
@@ -32,9 +33,8 @@ for dir_path in [
         json_path_map[os.path.basename(json_path).split(".")[0]] = json_path
 
 all_labels = []
-for i in range(len(stl_path_ls)):
-    print(i, end=" ")
-    base_name = os.path.basename(stl_path_ls[i]).split(".")[0]
+for path in tqdm.tqdm(stl_path_ls):
+    base_name = os.path.basename(path).split(".")[0]
     loaded_json = gu.load_json(json_path_map[base_name])
     labels = np.array(loaded_json['labels']).reshape(-1,1)
     if loaded_json['jaw'] == 'lower':
@@ -43,7 +43,7 @@ for i in range(len(stl_path_ls)):
     labels[labels//10==2] = (labels[labels//10==2]%10) + 8
     labels[labels<0] = 0
         
-    vertices, org_mesh = gu.read_txt_obj_ls(stl_path_ls[i], ret_mesh=True, use_tri_mesh=False)
+    vertices, org_mesh = gu.read_txt_obj_ls(path, ret_mesh=True, use_tri_mesh=False)
 
     vertices[:,:3] -= np.mean(vertices[:,:3], axis=0)
     #vertices[:, :3] = ((vertices[:, :3]-vertices[:, 1].min())/(vertices[:, 1].max() - vertices[:, 1].min()))*2-1

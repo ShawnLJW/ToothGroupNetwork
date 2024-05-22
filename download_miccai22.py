@@ -28,6 +28,11 @@ def download_from_gdrive(obj_dir, json_dir):
     with zipfile.ZipFile("ground-truth_labels_instances_b2.zip", "r") as zip_ref:
         zip_ref.extractall(json_dir)
     os.remove("ground-truth_labels_instances_b2.zip")
+    
+    print("splits")
+    gdown.download("https://drive.google.com/uc?id=1UykoAZiNT_Aph9YAhH32vzOr4DchYws_")
+    gdown.download("https://drive.google.com/uc?id=1UyPvzo1pcp2ZFwjEqqLop1Es5XbDz-CI")
+    gdown.download("https://drive.google.com/uc?id=1Athw2nmNAFC_sAD_BYSvdDVLH0JLZ-YH")
 
 def main():
     parser = argparse.ArgumentParser()

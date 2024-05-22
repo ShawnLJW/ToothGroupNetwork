@@ -13,47 +13,54 @@
 - Please post your questions to the issue board as it's hard to see them in emails.
 
 # Dataset
-- We used the dataset shared in [the challenge git repository](https://github.com/abenhamadou/3DTeethSeg22_challenge). For more information about the data, check out the link.
-- Dataset consists of dental mesh obj files and corresponding ground truth json files.
-- You can also download the challenge training split data in [google drive](https://drive.google.com/drive/u/1/folders/15oP0CZM_O_-Bir18VbSM8wRUEzoyLXby)(our codes are based on this data).
-  - After you download and unzip these zip files, merge `3D_scans_per_patient_obj_files.zip` and `3D_scans_per_patient_obj_files_b2.zip`. The parent path of these obj files is `data_obj_parent_directory`.
-  - Apply the same to the ground truth json files(`ground-truth_labels_instances.zip` and `ground-truth_labels_instances_b2.zip`. The parent path of these json files is `data_json_parent_directory`).
-  - The directory structure of your data should look like below..
-    ```
-    --data_obj_parent_directory
-    ----00OMSZGW
-    ------00OMSZGW_lower.obj
-    ------00OMSZGW_upper.obj
-    ----0EAKT1CU
-    ------0EAKT1CU_lower.obj
-    ------0EAKT1CU_upper.obj
-    and so on..
-    
-    --data_json_parent_directory
-    ----00OMSZGW
-    ------00OMSZGW_lower.json
-    ------00OMSZGW_upper.jsno
-    ----0EAKT1CU
-    ------0EAKT1CU_lower.json
-    ------0EAKT1CU_upper.json
-    and so on..
-    ```
-- If you have your dental mesh data, you can use it.
-  - In such cases, you need to adhere to the data name format(casename_upper.obj or casename_lower.obj).
-  - All axes must be aligned as shown in the figure below. Note that the Y-axis points towards the back direction(plz note that both lower jaw and upper jaw have the same z-direction!).
-    
-    <img src="https://user-images.githubusercontent.com/70117866/233266358-1f7139ff-3921-44d8-b5bf-1461645de2b3.png" width="600" height="400">
+
+We created a script to download the dataset used by [Tooth Group Network](https://github.com/limhoyeon/ToothGroupNetwork) from [google drive](https://drive.google.com/drive/u/1/folders/15oP0CZM_O_-Bir18VbSM8wRUEzoyLXby).
+
+The directory structure of your data should look like below:
+
+```{}
+--base_name_test_fold.txt
+--base_name_train_fold.txt
+--base_name_val_fold.txt
+
+--data_obj_parent_directory
+----00OMSZGW
+------00OMSZGW_lower.obj
+------00OMSZGW_upper.obj
+----0EAKT1CU
+------0EAKT1CU_lower.obj
+------0EAKT1CU_upper.obj
+and so on..
+
+--data_json_parent_directory
+----00OMSZGW
+------00OMSZGW_lower.json
+------00OMSZGW_upper.jsno
+----0EAKT1CU
+------0EAKT1CU_lower.json
+------0EAKT1CU_upper.json
+and so on..
+```
+
+If you have your dental mesh data, you can use it.
+
+- In such cases, you need to adhere to the data name format(casename_upper.obj or casename_lower.obj).
+- All axes must be aligned as shown in the figure below. Note that the Y-axis points towards the back direction(plz note that both lower jaw and upper jaw have the same z-direction!).
+  
+<img src="https://user-images.githubusercontent.com/70117866/233266358-1f7139ff-3921-44d8-b5bf-1461645de2b3.png" width="600" height="400">
   
 # Training
+
 ## Preprocessing
+
 - For training, you have to execute the `preprocess_data.py` to save the farthest point sampled vertices of the mesh (.obj) files.
 - Here is an example of how to execute `preprocess_data.py`.
-  ```
-  python preprocess.py
-   --source_obj_data_path data_obj_parent_directory \
-   --source_json_data_path data_json_parent_directory \
-   --save_data_path path/for/preprocessed_data
-  ```
+
+```{bash}
+python preprocess_data.py \
+--source_obj_data_path data_obj_parent_directory \
+--source_json_data_path data_json_parent_directory
+```
 
 ## Training
 - We offer six models(tsegnet | tgnet(ours) | pointnet | pointnetpp | dgcnn | pointtransformer).
@@ -69,7 +76,7 @@
    --model_name "tgnet_fps" \
    --config_path "train_configs/tgnet_fps.py" \
    --experiment_name "your_experiment_name" \
-   --input_data_dir_path "path/for/preprocessed_data" \
+   --input_data_dir_path "data_preprocessed_path" \
    --train_data_split_txt_path "base_name_train_fold.txt" \
    --val_data_split_txt_path "base_name_val_fold.txt"
   ```
