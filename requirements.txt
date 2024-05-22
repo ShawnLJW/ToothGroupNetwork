@@ -1,0 +1,8 @@
+wandb
+PyYAML
+open3d
+multimethod
+termcolor
+trimesh
+easydict
+./external_libs/pointops

@@ -195,16 +195,10 @@
 - It can be installed on other OS(window, etc..)
 - There are some issues with RTX40XX graphic cards. plz report in issue board.
 - if you have any issues while installing pointops library, please install another pointops library source in (https://github.com/POSTECH-CVLab/point-transformer).
-  ```
-  pip install wandb
-  pip install --ignore-installed PyYAML
-  pip install open3d
-  pip install multimethod
-  pip install termcolor
-  pip install trimesh
-  pip install easydict
-  cd external_libs/pointops && python setup.py install
-  ```
+
+```{bash}
+pip install -r requirements.txt
+```
 
 # Reference codes
 - https://github.com/LiyaoTang/contrastBoundary.git
