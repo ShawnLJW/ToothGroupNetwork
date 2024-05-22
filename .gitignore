@@ -134,3 +134,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# ignore datasets
+data_obj_parent_directory
+data_json_parent_directory
