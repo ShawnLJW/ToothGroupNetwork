@@ -88,33 +88,33 @@ def get_clustering_labels(moved_points, labels):
 
     Args:
         moved_points (N, 3): moved points 
-        labels (N, 1): labels
+        labels (N, ): labels
     """
     teeth_cond = labels != 0
     #pd_cond = probs > 0.9
     
     super_point_cond = teeth_cond #& pd_cond
 
-    clustering = DBSCAN(eps=0.03, min_samples=30).fit(moved_points[super_point_cond, :], 3)
-    clustering_labeled_moved_points = np.concatenate([moved_points[super_point_cond, :] ,clustering.labels_.reshape(-1,1)], axis=1)
-    #gu.print_3d(gu.np_to_pcd_with_label(clustering_labeled_moved_points))
+    clustering = DBSCAN(eps=0.03, min_samples=30).fit(moved_points[super_point_cond, :])
     clustering_labels = clustering.labels_
-    core_mask = np.zeros(clustering.labels_.shape[0]).astype(bool)
+    n = clustering_labels.shape[0]
+    
+    clustering_labeled_moved_points = np.concatenate([moved_points[super_point_cond, :] ,clustering_labels.reshape(-1,1)], axis=1) # (N, 4)
+    #gu.print_3d(gu.np_to_pcd_with_label(clustering_labeled_moved_points))
+    core_mask = np.full(n, False, dtype=bool)
     core_mask[clustering.core_sample_indices_] = True
     label_points_arr = []
     core_label_points_arr = []
-    for label in np.unique(clustering.labels_):
+    for label in np.unique(clustering_labels):
         if label==-1:
             continue
-        label_points_arr.append(clustering_labeled_moved_points[clustering_labeled_moved_points[:,3]==label,:])
-        temp_mask = (core_mask) & (clustering_labeled_moved_points[:,3]==label)
-        core_label_points_arr.append(clustering_labeled_moved_points[temp_mask, :])
-    label_points_arr = np.array(label_points_arr, dtype="object")
-    core_label_points_arr = np.array(core_label_points_arr, dtype="object")
+        label_mask = clustering_labeled_moved_points[:,3]==label
+        label_points_arr.append(clustering_labeled_moved_points[label_mask, :])
+        core_label_points_arr.append(clustering_labeled_moved_points[core_mask & label_mask, :])
 
-    eg_values=  []
-    for i in range(label_points_arr.shape[0]):
-        eg_values.append(get_eg_values(core_label_points_arr[i][:,:3]))
+    eg_values = []
+    for label in label_points_arr:
+        eg_values.append(get_eg_values(label[:,:3]))
     eg_values = np.array(eg_values)
 
     eg_values_first_axis = eg_values[:,0]
