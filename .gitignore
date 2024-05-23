@@ -134,3 +134,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# ignore datasets
+data_obj_parent_directory
+data_json_parent_directory
+data_preprocessed_path
+base_name_test_fold.txt
+base_name_train_fold.txt
+base_name_val_fold.txt
