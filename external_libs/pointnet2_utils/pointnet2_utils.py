@@ -86,14 +86,13 @@ def farthest_point_sample(xyz, npoint):
         return centroids
     if True:
         xyz_batch = xyz.reshape(-1,3).clone().detach()
-        offset = torch.range(1,xyz.shape[0])*xyz.shape[1]
-        offset = torch.tensor(offset).cuda().type(torch.int)
-        new_offset = torch.range(1,xyz.shape[0])*npoint
+        offset = torch.arange(1, xyz.shape[0] + 1, dtype=torch.int, device="cuda") * xyz.shape[1]
+        new_offset = torch.arange(1,xyz.shape[0]+1)*npoint
         new_offset = new_offset.cuda().type(torch.int)
         xyz_batch = xyz_batch.contiguous()
         results = pointops.furthestsampling(xyz_batch, offset, new_offset) 
         results = results.reshape(xyz.shape[0], npoint).type(torch.long)
-        results = results - (torch.range(0, xyz.shape[0]-1).cuda().type(torch.long) * xyz.shape[1]).reshape(-1,1)
+        results = results - (torch.arange(0, xyz.shape[0]).cuda().type(torch.long) * xyz.shape[1]).reshape(-1,1)
 
         return results
         #gu.print_3d(gu.torch_to_numpy(xyz_batch[gu.torch_to_numpy(results[0])]))

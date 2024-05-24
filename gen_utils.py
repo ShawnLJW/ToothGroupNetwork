@@ -139,12 +139,16 @@ def fps(xyz, npoint):
     idx = pointops.furthestsampling(xyz, torch.tensor([xyz.shape[0]]).cuda().type(torch.int), torch.tensor([npoint]).cuda().type(torch.int)) 
     return torch_to_numpy(idx).reshape(-1)
 
-def print_3d(*data_3d_ls):
+def print_3d(*data_3d_ls, wireframe=False, back_face=True):
     data_3d_ls = [item for item in data_3d_ls]
     for idx, item in enumerate(data_3d_ls):
         if type(item) == np.ndarray:
             data_3d_ls[idx] = np_to_pcd(item)
-    o3d.visualization.draw_geometries(data_3d_ls, mesh_show_wireframe = True, mesh_show_back_face = True)
+    o3d.visualization.draw_geometries(
+        data_3d_ls,
+        mesh_show_wireframe = wireframe,
+        mesh_show_back_face = back_face,
+    )
 
 def torch_to_numpy(cuda_arr):
     return cuda_arr.cpu().detach().numpy()

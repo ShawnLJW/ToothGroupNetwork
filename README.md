@@ -96,6 +96,7 @@ python preprocess_data.py \
   ```
 
 ### 2. tsegnet
+
 - This is the implementation of model [TSegNet](https://enigma-li.github.io/projects/tsegNet/TSegNet.html). Please refer to the paper for detail.
 - First, The centroid prediction module has to be trained first in tsegnet. To train the centroid prediction module, please modify the `run_tooth_seg_mentation_module` parameter to False in the `train_configs/tsegnet.py` file.
   ![image](https://github.com/limhoyeon/ToothGroupNetwork/assets/70117866/c37eb2ac-b36d-4ca9-a014-b785fd556c35)
@@ -123,6 +124,7 @@ python preprocess_data.py \
 
 
 ### 3. pointnet | pointnetpp | dgcnn | pointtransformer
+
 - [pointnet](https://arxiv.org/abs/1612.00593) | [pointnet++](http://stanford.edu/~rqi/pointnet2/) | [dgcnn](https://liuziwei7.github.io/projects/DGCNN) | [pointtransformer](https://arxiv.org/abs/2012.09164)
 - This model directly applies the point cloud segmentation method to tooth segmentation.
 - train models by entering the following command.
@@ -151,29 +153,34 @@ python preprocess_data.py \
    --checkpoint_path your/model/checkpoint/path
   ```
 - Inference with tgnet(ours)
-  ```
-  python start_inference.py \
-   --input_dir_path obj/file/parent/path \
-   --split_txt_path base_name_test_fold.txt \
-   --save_path path/to/save/results \
-   --model_name tgnet_fps \
-   --checkpoint_path your/tgnet_fps/checkpoint/path
-   --checkpoint_path_bdl your/tgnet_bdl/checkpoint/path
-  ```
-  - Please input the parent path of the original mesh obj files instead of the preprocessed sampling points in `--input_data_dir_path` for training. The inference process will handle the farthest point sampling internally.
-  - For `split_txt_path`, provide the test split fold's casenames in the same format as used during training.
+
+```
+python start_inference.py \
+  --input_dir_path obj/file/parent/path \
+  --split_txt_path base_name_test_fold.txt \
+  --save_path path/to/save/results \
+  --model_name tgnet_fps \
+  --checkpoint_path your/tgnet_fps/checkpoint/path
+  --checkpoint_path_bdl your/tgnet_bdl/checkpoint/path
+```
+
+- Please input the parent path of the original mesh obj files instead of the preprocessed sampling points in `--input_data_dir_path` for training. The inference process will handle the farthest point sampling internally.
+- For `split_txt_path`, provide the test split fold's casenames in the same format as used during training.
 - Predicted results are saved in save_path like below... It has the same format as the ground truth json file.
-  ```
-  --save_path
-  ----00OMSZGW_lower.json
-  ----00OMSZGW_upper.json
-  ----0EAKT1CU_lower.json
-  ----0EAKT1CU_upper.json
-  and so on...
-  ```
+
+```
+--save_path
+----00OMSZGW_lower.json
+----00OMSZGW_upper.json
+----0EAKT1CU_lower.json
+----0EAKT1CU_upper.json
+and so on...
+```
+
 - the inference config in "inference_pipelines.infenrece_pipeline_maker.py" has to be the same as the model of the train config. If you change the train config, then you have to change the inference config.
 
 # Test results
+
 - The checkpoints we provided were trained for 60 epochs using the train-validation split provided in the dataset drive link(`base_name_train_fold.txt`, `base_name_val_fold.txt`). The results obtained using the test split(`base_name_test_fold.txt`) are as follows
   
   ![image](https://github.com/limhoyeon/ToothGroupNetwork/assets/70117866/507b0a8d-e82b-4acb-849d-86388c0099d3)
@@ -184,20 +191,22 @@ python preprocess_data.py \
 
   ![image](https://github.com/limhoyeon/ToothGroupNetwork/assets/70117866/2d771b98-435c-49a6-827c-a85ab5bed6e2)
 
-
 # Evaulation & Visualization
+
 - We provide the evaluation and visualization code.
 - You can execute the following code to test on a pair of obj/gt json file:
-  ```
-  eval_visualize_results.py \
-   --mesh_path path/to/obj_file \ 
-   --gt_json_path path/to/gt_json_file \
-   --pred_json_path path/to/predicted_json_file(a result of inference code)
-  ```
+
+```
+eval_visualize_results.py \
+  --mesh_path path/to/obj_file \ 
+  --gt_json_path path/to/gt_json_file \
+  --pred_json_path path/to/predicted_json_file(a result of inference code)
+```
+
 - With just a few modifications to the provided code, you can write code to test all the results.
 
-
 # Installation
+
 - Installtion is tested on pytorch/pytorch:1.7.1-cuda11.0-cudnn8-devel(ubuntu, pytorch 1.7.1) docker image.
 - It can be installed on other OS(window, etc..)
 - There are some issues with RTX40XX graphic cards. plz report in issue board.
@@ -208,6 +217,7 @@ pip install -r requirements.txt
 ```
 
 # Reference codes
+
 - https://github.com/LiyaoTang/contrastBoundary.git
 - https://github.com/yanx27/Pointnet_Pointnet2_pytorch
 - https://github.com/POSTECH-CVLab/point-transformer.git
