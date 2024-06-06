@@ -48,7 +48,7 @@ class TSegNetModel(BaseModel):
 
         gt_centroid_coords, gt_centroid_exists = ou.seg_label_to_cent(batch_item["feat"][:,:3,:], batch_item["gt_seg_label"])
 
-        gt_centroids_label = torch.range(0, 15).view(1,-1).cuda() + 1
+        gt_centroids_label = torch.arange(0, 16).view(1,-1).cuda() + 1
         gt_centroid_exists = gt_centroid_exists.view(1, -1)
         gt_centroid_coords = gt_centroid_coords.permute(0,2,1)
         gt_centroid_coords = gt_centroid_coords[gt_centroid_exists>0, :]
