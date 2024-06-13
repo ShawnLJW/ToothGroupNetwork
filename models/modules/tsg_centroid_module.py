@@ -6,15 +6,15 @@ class get_model(nn.Module):
     def __init__(self):
         super(get_model, self).__init__()
         
-        input_feauture_num = 6
-        self.sa1 = PointNetSetAbstractionMsg(1024, [0.025, 0.05], [32, 64], input_feauture_num, [[32, 32], [32, 32]])
+        input_feature_num = 6
+        self.sa1 = PointNetSetAbstractionMsg(1024, [0.025, 0.05], [32, 64], input_feature_num, [[32, 32], [32, 32]])
         self.sa2 = PointNetSetAbstractionMsg(512, [0.05, 0.1], [32, 64], 32+32, [[64, 128], [64, 128]])
         self.sa3 = PointNetSetAbstractionMsg(256, [0.1, 0.2], [32, 64], 128+128, [[196, 256], [196, 256]])
         
 
         self.fp3 = PointNetFeaturePropagation(768, [256, 256])
         self.fp2 = PointNetFeaturePropagation(320, [128, 128])
-        self.fp1 = PointNetFeaturePropagation(128+input_feauture_num, [64, 32])
+        self.fp1 = PointNetFeaturePropagation(128+input_feature_num, [64, 32])
 
         self.offset_conv_1 = nn.Conv1d(515,256, 1)
         self.offset_bn_1 = nn.BatchNorm1d(256)

@@ -47,7 +47,7 @@ def load_mesh(mesh_path, only_tooth_crop = False):
 
 def get_colored_mesh(mesh, label_arr):
     palte = np.array([
-        [255,153,153],
+        [230,230,222],
 
         [153,76,0],
         [153,153,0],
