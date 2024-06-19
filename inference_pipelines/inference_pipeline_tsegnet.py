@@ -13,9 +13,10 @@ class InferencePipeLine:
         self.scaler = 1.8
         self.shifter = 0.8
 
-    def __call__(self, stl_path):
+    def __call__(self, mesh):
         DEBUG=False
-        _, mesh = gu.read_txt_obj_ls(stl_path, ret_mesh=True, use_tri_mesh=True) #TODO slow processing speed
+        if isinstance(mesh, str):
+            _, mesh = gu.read_txt_obj_ls(mesh, ret_mesh=True, use_tri_mesh=True) #TODO slow processing speed
         vertices = np.array(mesh.vertices)
         n_vertices = vertices.shape[0]
         vertices[:,:3] -= np.mean(vertices[:,:3], axis=0)
