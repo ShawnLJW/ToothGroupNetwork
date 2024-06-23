@@ -19,7 +19,9 @@ class PointFirstModel(BaseModel):
         #centroids = batch_item[1].cuda()
         seg_label = batch_item["gt_seg_label"].cuda()
         
-        inputs = [points, seg_label]
+        inputs = [l0_xyz, seg_label]
+        # inputs = [points, seg_label]
+        # print(inputs[0])
         
         if phase == "train":
             output = self.module(inputs)

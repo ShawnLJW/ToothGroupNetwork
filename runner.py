@@ -4,7 +4,29 @@ from torch.utils.data import DataLoader
 import os
 import torch
 
-def collate_fn(batch):
+# # need to correct this
+# def collate_fn(batch):
+#     output = {}
+    
+
+#     for batch_item in batch:
+#         for key in batch_item.keys():
+#             if key not in output:
+#                 output[key] = []
+#             output[key].append(batch_item[key])
+    
+#     for output_key in output.keys():
+#         # print(output_key)
+#         if output_key in ["feat", "gt_seg_label", "uniform_feat", "uniform_gt_seg_label"]:
+#             output[output_key] = torch.stack(output[output_key])
+#             print('a6666', output[output_key].size())
+#             print('a99999', output[output_key].unique())
+
+
+#     # print('co outputss', output[output_key])
+#     return output
+
+def collate_fn(batch): # combine batch data
     output = {}
 
     for batch_item in batch:
@@ -15,7 +37,28 @@ def collate_fn(batch):
     
     for output_key in output.keys():
         if output_key in ["feat", "gt_seg_label", "uniform_feat", "uniform_gt_seg_label"]:
-            output[output_key] = torch.stack(output[output_key])
+            # Find the maximum size in the second dimension
+            max_size = max([item.size(1) for item in output[output_key]])
+            
+            # Pad each tensor to have the same size in the second dimension
+            padded_tensors = []
+            for tensor in output[output_key]:
+                padding = (0, max_size - tensor.size(1))  # Pad only in the second dimension
+                padded_tensor = torch.nn.functional.pad(tensor, padding)
+                padded_tensors.append(padded_tensor)
+            
+            # Stack the padded tensors
+            output[output_key] = torch.stack(padded_tensors)
+            # print('a6666', output[output_key].size())
+            # print('a8888', output[output_key].min())
+            # print('a99999', output[output_key].max())
+            # print('a999991', output[output_key].unique())
+            # not sure whether padding is the correct way to overcome the 
+            # issue of stacking tensors of unequal size 
+            
+
+
+
     return output
 
 def get_mesh_path(basename):

@@ -1,0 +1,16 @@
+name: teethseg
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.11.9
+  - pip=24.0
+  - cxx-compiler=1.7.0
+  - jupyterlab=4.2.0
+  - jupyterlab_server=2.27.1
+  - pytorch=2.3.0
+  - pytorch-cuda=12.1
+  - cuda-toolkit=12.1
+  - trimesh=4.3.2
