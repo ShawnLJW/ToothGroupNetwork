@@ -7,7 +7,8 @@ class get_model(nn.Module):
     def __init__(self):
         super(get_model, self).__init__()
         self.cls_pred = True
-        input_feature_num=6
+        # input_feature_num=6
+        input_feature_num=3
         scale = 4
         # target point 개수, ball query radius, maximun sample in ball 개수, input feature 개수(position + 각각의 feature vector), MLP 개수, group_all False 
         self.sa1 = PointNetSetAbstractionMsg(1024, [0.025, 0.05], [32, 64], input_feature_num, [[32*scale, 32*scale], [32*scale, 32*scale]])
@@ -41,7 +42,9 @@ class get_model(nn.Module):
         
     #input으로, batch, channel(xyz + 기타등등), sample in batch 이렇게 와야 한다.
     def forward(self, xyz_in):
+        # print(xyz_in)
         xyz = xyz_in[0]
+        # print(xyz)
         l0_points = xyz
         l0_xyz = xyz[:,:3,:]
         l1_xyz, l1_points = self.sa1(l0_xyz, l0_points)
@@ -66,6 +69,8 @@ class get_model(nn.Module):
             cls_pred = F.relu(self.cls_bn_1(self.cls_conv_1(l0_points)))
             cls_pred = self.cls_conv_2(cls_pred)
             output.append(cls_pred)
+        
+        # print(output)
 
         return output
 
@@ -102,7 +107,7 @@ class get_loss(nn.Module):
 if __name__ == '__main__':
     import torch
     model = get_model()
-    xyz = torch.rand(6, 6, 2048)
+    xyz = torch.rand(6, 3, 2048)
     #output is B, C, N order
     for item in model(xyz):
         print(item.shape)

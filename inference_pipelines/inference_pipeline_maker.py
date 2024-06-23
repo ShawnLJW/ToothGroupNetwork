@@ -64,7 +64,7 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.modules.pointnet import PointFirstModule
         module = PointFirstModule({})
-        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        #module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     elif model_name=="pointnetpp":
@@ -74,11 +74,18 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
         module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
+    elif model_name=="pointmlp":
+        from inference_pipelines.inference_pipeline_sem import InferencePipeLine
+        from models.modules.pointmlp import PointMLPFirstModule 
+        module = PointMLPFirstModule({})
+        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        module.cuda()
+        return InferencePipeLine(module)
     elif model_name=="dgcnn":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.modules.dgcnn import DGCnnModule
         module = DGCnnModule({})
-        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        #module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     elif model_name=="pointtransformer":

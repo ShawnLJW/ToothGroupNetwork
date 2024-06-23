@@ -47,7 +47,7 @@ class DGCnnModule(nn.Module):
         drop_out_ratio = 0.5
         emb_dims = 1024
         self.k = 20
-        input_dim = 6
+        input_dim = 3
         
         self.scale = 1
         

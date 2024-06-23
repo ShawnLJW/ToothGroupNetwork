@@ -1,4 +1,5 @@
-#include <vector> 
+#include <vector>
+// #include <THC/THC.h>
 #include <torch/serialize/tensor.h>
 #include <ATen/cuda/CUDAContext.h>
 #include "interpolation_cuda_kernel.h"

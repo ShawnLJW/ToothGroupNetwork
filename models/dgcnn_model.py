@@ -18,7 +18,8 @@ class DGCnnModel(BaseModel):
         
         seg_label = batch_item["gt_seg_label"].cuda()
         
-        inputs = [points, seg_label]
+        # inputs = [points, seg_label]
+        inputs = [l0_xyz, seg_label]
         
         if phase == "train":
             output = self.module(inputs)

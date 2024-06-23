@@ -3,8 +3,8 @@ from train_configs import train_config_maker
 import argparse
 
 parser = argparse.ArgumentParser(description='Inference models')
-parser.add_argument('--model_name', default="tsegnet", type=str, help = "model name. list: tsegnet | tgnet_fps/tgnet_bdl | pointnet | pointnetpp | dgcnn | pointtransformer")
-parser.add_argument('--config_path', default="train_configs/tsegnet.py", type=str, help = "train config file path.")
+parser.add_argument('--model_name', default="tgnet_fps", type=str, help = "model name. list: tsegnet | tgnet_fps/tgnet_bdl | pointnet | pointnetpp | dgcnn | pointtransformer")
+parser.add_argument('--config_path', default="train_configs/tgnet_fps.py", type=str, help = "train config file path.")
 parser.add_argument('--experiment_name', default="tsegnet_0620", type=str, help = "experiment name.")
 parser.add_argument('--input_data_dir_path', default="data_preprocessed_path", type=str, help = "input data dir path.")
 parser.add_argument('--train_data_split_txt_path', default="base_name_train_fold.txt", type=str, help = "train cases list file path.")
@@ -39,6 +39,13 @@ elif args.model_name == "pointnetpp":
     from models.pointnet_pp_model import PointPpFirstModel
     from models.modules.pointnet_pp import PointPpFirstModule
     model = PointPpFirstModel(config, PointPpFirstModule)
+    # print(config)
+elif args.model_name == "pointmlp":
+    from models.pointmlp_model import PointMLPFirstModel
+    from models.modules.pointmlp import PointMLPFirstModule
+    model = PointMLPFirstModel(config, PointMLPFirstModule)
+    # print(config)
+    # model = pointMLP_seg()
 elif args.model_name == "pointtransformer":
     from models.transformer_model import TransformerModel
     from models.modules.point_transformer import PointTransformerModule
@@ -47,5 +54,6 @@ elif args.model_name == "tgnet_bdl":
     from models.bdl_grouping_netowrk_model import BdlGroupingNetworkModel
     from models.modules.grouping_network_module import GroupingNetworkModule
     model = BdlGroupingNetworkModel(config, GroupingNetworkModule)
+
 
 runner(config, model)
