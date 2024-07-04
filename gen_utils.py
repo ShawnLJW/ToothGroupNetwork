@@ -121,16 +121,15 @@ def get_number_from_name(path):
 def get_up_from_name(path):
     return os.path.basename(path).split("_")[-1].split(".")[0]=="up"
 
-def resample_pcd(pcd_ls, n, method):
+def resample_pcd(pcd, n):
     """Drop or duplicate points so that pcd has exactly n points"""
-    if method=="uniformly":
-        idx = np.random.permutation(pcd_ls[0].shape[0])
-    elif method == "fps":
-        idx = fps(pcd_ls[0][:,:3], n)
-    pcd_resampled_ls = []
-    for i in range(len(pcd_ls)):
-        pcd_resampled_ls.append(pcd_ls[i][idx[:n]])
-    return pcd_resampled_ls
+    if pcd.shape[0] == n:
+        return pcd
+    elif pcd.shape[0] > n:
+        idx = fps(pcd[:,:3], n)
+    elif pcd.shape[0] < n:
+        idx = torch.randint(0, pcd.shape[0], (24000,))
+    return pcd[idx] 
 
 def fps(xyz, npoint):
     if xyz.shape[0]<=npoint:
