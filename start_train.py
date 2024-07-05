@@ -32,13 +32,11 @@ elif args.model_name == "dgcnn":
     from models.modules.dgcnn import DGCnnModule
     model = DGCnnModel(config, DGCnnModule)
 elif args.model_name == "pointnet":
-    from models.pointnet_model import PointFirstModel
-    from models.modules.pointnet import PointFirstModule
-    model = PointFirstModel(config, PointFirstModule)
+    from models.pointnet import PointNet
+    model = PointNet()
 elif args.model_name == "pointnetpp":
-    from models.pointnet_pp_model import PointPpFirstModel
-    from models.modules.pointnet_pp import PointPpFirstModule
-    model = PointPpFirstModel(config, PointPpFirstModule)
+    from models.pointnet_pp import PointNetPp
+    model = PointNetPp()
 elif args.model_name == "pointtransformer":
     from models.transformer_model import TransformerModel
     from models.modules.point_transformer import PointTransformerModule
