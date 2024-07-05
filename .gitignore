@@ -11,6 +11,9 @@ datasets/
 output_path/
 example_data/
 wandb/
+runs/
+ckpts/
+*.pt
 *.h5
 
 # Distribution / packaging
