@@ -62,15 +62,15 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
         return InferencePipeLine(inference_config)
     elif model_name=="pointnet":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
-        from models.modules.pointnet import PointFirstModule
-        module = PointFirstModule({})
+        from models.pointnet import PointNet
+        module = PointNet()
         module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     elif model_name=="pointnetpp":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
-        from models.modules.pointnet_pp import PointPpFirstModule 
-        module = PointPpFirstModule({})
+        from models.pointnet_pp import PointNetPp
+        module = PointNetPp()
         module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
