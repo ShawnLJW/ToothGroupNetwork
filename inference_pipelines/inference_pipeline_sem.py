@@ -21,10 +21,8 @@ class InferencePipeLine:
             tri_ls = np.array(tri_mesh_loaded_mesh.faces)+1
 
             if self.pca:
-                print("PCA")
                 vertex_ls = PCA(n_components=3).fit_transform(vertex_ls)
-            else:
-                print("No PCA")
+                vertex_ls[:, 1] *= -1
             
             mesh = o3d.geometry.TriangleMesh()
             mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
