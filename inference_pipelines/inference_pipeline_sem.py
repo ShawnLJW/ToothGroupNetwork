@@ -3,18 +3,33 @@ import numpy as np
 import torch
 from sklearn.neighbors import KDTree
 import os
+import trimesh
 import open3d as o3d
+from sklearn.decomposition import PCA
 
 class InferencePipeLine:
-    def __init__(self, model):
+    def __init__(self, model, pca=False):
         self.model = model
-
+        self.pca = pca
         self.scaler = 1.8
         self.shifter = 0.8
 
-    def __call__(self, mesh, pca=False):
+    def __call__(self, mesh):
         if isinstance(mesh, str):
-            _, mesh = gu.read_txt_obj_ls(mesh, ret_mesh=True, use_tri_mesh=True) #TODO slow processing speed
+            tri_mesh_loaded_mesh = trimesh.load_mesh(mesh, process=False)
+            vertex_ls = np.array(tri_mesh_loaded_mesh.vertices)
+            tri_ls = np.array(tri_mesh_loaded_mesh.faces)+1
+
+            if self.pca:
+                print("PCA")
+                vertex_ls = PCA(n_components=3).fit_transform(vertex_ls)
+            else:
+                print("No PCA")
+            
+            mesh = o3d.geometry.TriangleMesh()
+            mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
+            mesh.triangles = o3d.utility.Vector3iVector(np.array(tri_ls)-1)
+            mesh.compute_vertex_normals()
         vertices = np.array(mesh.vertices)
         n_vertices = vertices.shape[0]
         vertices[:,:3] -= np.mean(vertices[:,:3], axis=0)
