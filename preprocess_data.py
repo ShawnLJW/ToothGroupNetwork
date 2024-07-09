@@ -46,13 +46,11 @@ for path in tqdm.tqdm(stl_path_ls):
     vertices, org_mesh = gu.read_txt_obj_ls(path, ret_mesh=True, use_tri_mesh=False)
 
     vertices[:,:3] -= np.mean(vertices[:,:3], axis=0)
-    #vertices[:, :3] = ((vertices[:, :3]-vertices[:, 1].min())/(vertices[:, 1].max() - vertices[:, 1].min()))*2-1
     vertices[:, :3] = ((vertices[:, :3]-Y_AXIS_MIN)/(Y_AXIS_MAX - Y_AXIS_MIN))*2-1
 
     labeled_vertices = np.concatenate([vertices,labels], axis=1)
 
     name_id = str(base_name)
-    if labeled_vertices.shape[0]>24000:
-        labeled_vertices = gu.resample_pcd([labeled_vertices], 24000, "fps")[0]
+    labeled_vertices = gu.resample_pcd(labeled_vertices, 24000)
 
     np.save(os.path.join(SAVE_PATH, f"{name_id}_{loaded_json['jaw']}_sampled_points"), labeled_vertices)

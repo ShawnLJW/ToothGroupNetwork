@@ -1,8 +1,23 @@
-from trainer import Trainer
 from generator import DentalModelGenerator
-from torch.utils.data import DataLoader
+from transformers import Trainer, TrainingArguments
+from sklearn.metrics import accuracy_score, f1_score, jaccard_score
 import os
 import torch
+
+
+def eval_model(preds):
+    pred_labels = preds.predictions.argmax(axis=1).reshape(-1)
+    gt_labels = preds.label_ids.reshape(-1) + 1
+
+    acc = accuracy_score(gt_labels, pred_labels)
+    f1 = f1_score(gt_labels, pred_labels, average="micro")
+    iou = jaccard_score(gt_labels, pred_labels, average="micro")
+
+    return {
+        "accuracy": acc,
+        "f1": f1,
+        "iou": iou,
+    }
 
 def collate_fn(batch):
     output = {}
@@ -18,40 +33,49 @@ def collate_fn(batch):
             output[output_key] = torch.stack(output[output_key])
     return output
 
-def get_mesh_path(basename):
-    case_name = basename.split("_")[0]
-    file_name = basename.split("_")[0]+"_"+basename.split("_")[1]+".obj"
-    return os.path.join("all_datas", "chl", "3D_scans_per_patient_obj_files", f"{case_name}", file_name)
+def get_generator_set(config):
+    train_ds = DentalModelGenerator(
+        config["input_data_dir_path"],
+        aug_obj_str=config["aug_obj_str"],
+        split_with_txt_path=config["train_data_split_txt_path"],
+    )
 
-def get_generator_set(config, is_test=False):
-    if not is_test:
-        point_loader = DataLoader(
-            DentalModelGenerator(
-                config["input_data_dir_path"], 
-                aug_obj_str=config["aug_obj_str"],
-                split_with_txt_path=config["train_data_split_txt_path"]
-            ), 
-            shuffle=True,
-            batch_size=config["train_batch_size"],
-            collate_fn=collate_fn
-        )
-
-        val_point_loader = DataLoader(
-            DentalModelGenerator(
-                config["input_data_dir_path"], 
-                aug_obj_str=None,
-                split_with_txt_path=config["val_data_split_txt_path"]
-
-            ), 
-            shuffle=False,
-            batch_size=config["val_batch_size"],
-            collate_fn= collate_fn
-        )
-        return [point_loader, val_point_loader]
+    val_ds = DentalModelGenerator(
+        config["input_data_dir_path"],
+        aug_obj_str=None,
+        split_with_txt_path=config["val_data_split_txt_path"],
+    )
+    
+    return train_ds, val_ds
+    
 
 def runner(config, model):
-    gen_set = [get_generator_set(config["generator"], False)]
-    print("train_set", len(gen_set[0][0]))
-    print("validation_set", len(gen_set[0][1]))
-    trainner = Trainer(config=config, model = model, gen_set=gen_set)
-    trainner.run()
+    os.environ["WANDB_PROJECT"] = "teeth_segmentation"
+    train_ds, val_ds = get_generator_set(config["generator"])
+    args = TrainingArguments(
+        "runs",
+        eval_strategy="steps",
+        per_device_train_batch_size=4,
+        per_device_eval_batch_size=4,
+        gradient_accumulation_steps=4,
+        learning_rate=1e-4,
+        weight_decay=1e-4,
+        lr_scheduler_type="constant",
+        dataloader_num_workers=4,
+        num_train_epochs=30,
+        load_best_model_at_end=True,
+        metric_for_best_model="iou",
+        report_to="wandb",
+        run_name="pointnetpp-constantlr",
+        logging_steps=50,
+    )
+    trainer = Trainer(
+        model,
+        args,
+        data_collator=collate_fn,
+        train_dataset=train_ds,
+        eval_dataset=val_ds,
+        compute_metrics=eval_model,
+    )
+    trainer.train()
+    

@@ -3,7 +3,8 @@ import torch.nn as nn
 import torch.nn.parallel
 import torch.utils.data
 import torch.nn.functional as F
-from external_libs.pointnet2_utils.pointnet_utils import PointNetEncoder, feature_transform_reguliarzer
+from models.tgn_loss import tooth_class_loss
+from external_libs.pointnet2_utils.pointnet_utils import PointNetEncoder
 
 
 class get_model(nn.Module):
@@ -20,8 +21,7 @@ class get_model(nn.Module):
         self.bn2 = nn.BatchNorm1d(256*scale)
         self.bn3 = nn.BatchNorm1d(128*scale)
 
-    def forward(self, x_in):
-        x = x_in[0]
+    def forward(self, x):
         batchsize = x.size()[0]
         n_pts = x.size()[2]
         x, trans, trans_feat = self.feat(x)
@@ -34,37 +34,24 @@ class get_model(nn.Module):
         x = x.view(batchsize, n_pts, self.k).permute(0,2,1)
         return x, trans_feat
 
-class get_loss(torch.nn.Module):
-    def __init__(self, mat_diff_loss_scale=0.001):
-        super(get_loss, self).__init__()
-        self.mat_diff_loss_scale = mat_diff_loss_scale
 
-    def forward(self, pred, target, trans_feat, weight):
-        loss = F.nll_loss(pred, target, weight = weight)
-        mat_diff_loss = feature_transform_reguliarzer(trans_feat)
-        total_loss = loss + mat_diff_loss * self.mat_diff_loss_scale
-        return total_loss
-
-
-class PointFirstModule(torch.nn.Module):
-    def __init__(self, config):
-        self.config = config
-
+class PointNet(torch.nn.Module):
+    def __init__(self):
         super().__init__()
         self.first_sem_model = get_model()
 
-    def forward(self, inputs, test=False):
-        DEBUG=False
+    def forward(self, feat, gt_seg_label=None):
         """
-        inputs
-            inputs[0] => B, 6, 24000 : point features
-            inputs[1] => B, 1, 24000 : ground truth segmentation
+        Args:
+            inputs (B, 6, 24000): point features
+            
+        Returns:
+            cls_pred (B, 17, 24000): predicted class
         """
-        B, C, N = inputs[0].shape
-        cls_pred, feats = self.first_sem_model(inputs)
-        outputs = {
-            "cls_pred": cls_pred
-        }
+        cls_pred, feats = self.first_sem_model(feat)
+        outputs = {"cls_pred": cls_pred}
+        if gt_seg_label is not None:
+            outputs["loss"] = tooth_class_loss(cls_pred, gt_seg_label, 17)
         return outputs
         
 if __name__ == '__main__':

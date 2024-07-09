@@ -1,7 +1,9 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from models.tgn_loss import tooth_class_loss
 from external_libs.pointnet2_utils.pointnet2_utils import PointNetSetAbstractionMsg,PointNetFeaturePropagation
-import torch
+
 
 class get_model(nn.Module):
     def __init__(self):
@@ -40,8 +42,7 @@ class get_model(nn.Module):
         self.bn1 = nn.BatchNorm1d(16)
         
     #input으로, batch, channel(xyz + 기타등등), sample in batch 이렇게 와야 한다.
-    def forward(self, xyz_in):
-        xyz = xyz_in[0]
+    def forward(self, xyz):
         l0_points = xyz
         l0_xyz = xyz[:,:3,:]
         l1_xyz, l1_points = self.sa1(l0_xyz, l0_points)
@@ -70,34 +71,23 @@ class get_model(nn.Module):
         return output
 
 
-class PointPpFirstModule(torch.nn.Module):
-    def __init__(self, config):
-        self.config = config
-
+class PointNetPp(torch.nn.Module):
+    def __init__(self):
         super().__init__()
         self.first_sem_model = get_model()
 
-    def forward(self, inputs, test=False):
-        DEBUG=False
+    def forward(self, feat, gt_seg_label=None):
         """
         inputs
             inputs[0] => B, 6, 24000 : point features
             inputs[1] => B, 1, 24000 : ground truth segmentation
         """
-        B, C, N = inputs[0].shape
-        l0_points, l3_points, l0_xyz, l3_xyz, offset_result, dist_result, cls_pred = self.first_sem_model(inputs)
-        outputs = {
-            "cls_pred": cls_pred
-        }
+        l0_points, l3_points, l0_xyz, l3_xyz, offset_result, dist_result, cls_pred = self.first_sem_model(feat)
+        outputs = {"cls_pred": cls_pred}
+        if gt_seg_label is not None:
+            outputs["loss"] = tooth_class_loss(cls_pred, gt_seg_label, 17)
         return outputs
 
-class get_loss(nn.Module):
-    def __init__(self):
-        super(get_loss, self).__init__()
-    def forward(self, pred, target, trans_feat, weight):
-        total_loss = F.nll_loss(pred, target, weight=weight)
-
-        return total_loss
 
 if __name__ == '__main__':
     import torch

@@ -1,5 +1,6 @@
 from torch import nn
 import torch
+from .tgn_loss import tooth_class_loss
 
 def knn(x, k):
     inner = -2*torch.matmul(x.transpose(2, 1), x)
@@ -41,9 +42,9 @@ def get_graph_feature(x, k=20, idx=None, dim9=False):
     return feature      # (batch_size, 2*num_dims, num_points, k)
 
 
-class DGCnnModule(nn.Module):
-    def __init__(self, config):
-        super(DGCnnModule, self).__init__()
+class DGCnn(nn.Module):
+    def __init__(self, config=None):
+        super(DGCnn, self).__init__()
         drop_out_ratio = 0.5
         emb_dims = 1024
         self.k = 20
@@ -93,9 +94,9 @@ class DGCnnModule(nn.Module):
         nn.init.zeros_(self.offset_conv.weight)
         nn.init.zeros_(self.dist_conv.weight)
 
-    def forward(self, x_in):
-        x = x_in[0]
-        l0_xyz = x[:,:3,:]
+    def forward(self, feat, gt_seg_label=None):
+        l0_xyz = feat[:,:3,:]
+        x = feat
         batch_size = x.size(0)
         num_points = x.size(2)
 
@@ -128,8 +129,8 @@ class DGCnnModule(nn.Module):
         cls_result = self.cls_conv(x)                       # (batch_size, 256, num_points) -> (batch_size, 13, num_points)
         offset_result = self.offset_conv(x)
         dist_result = self.dist_conv(x)
-
-        return {
-            "cls_pred" : cls_result
-        }
+        outputs = {"cls_pred": cls_result}
+        if gt_seg_label is not None:
+            outputs["loss"] = tooth_class_loss(cls_result, gt_seg_label, 17)
+        return outputs
         

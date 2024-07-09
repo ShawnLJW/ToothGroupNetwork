@@ -27,7 +27,7 @@ class InferencePipeLine:
         if np.asarray(mesh.vertices).shape[0] < 24000:
             mesh = mesh.subdivide_midpoint(number_of_iterations=1)
         vertices = np.array(np.concatenate([np.array(mesh.vertices), np.array(mesh.vertex_normals)], axis=1))
-        sampled_feats = gu.resample_pcd([vertices.copy()], 24000, "fps")[0] #TODO slow processing speed
+        sampled_feats = gu.resample_pcd(vertices.copy(), 24000) #TODO slow processing speed
 
         input_cuda_feats = torch.from_numpy(np.array([sampled_feats.astype('float32')])).cuda().permute(0,2,1)
 
