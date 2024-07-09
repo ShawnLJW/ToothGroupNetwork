@@ -41,7 +41,7 @@ class InferencePipeLine:
             
         vertices = np.array(np.concatenate([np.array(mesh.vertices), np.array(mesh.vertex_normals)], axis=1))
 
-        sampled_feats = gu.resample_pcd([vertices.copy()], 24000, "fps")[0] #TODO slow processing speed
+        sampled_feats = gu.resample_pcd(vertices.copy(), 24000) #TODO slow processing speed
 
         input_cuda_feats = torch.from_numpy(np.array([sampled_feats.astype('float32')])).cuda().permute(0,2,1)
         first_results = self.get_first_module_results(input_cuda_feats, self.first_module)
@@ -307,10 +307,12 @@ class InferencePipeLine:
 
         bd_org_feat_cpu = org_feats[bd_labels==1, :]
         bd_org_ps_label_cpu = ps_labels[bd_labels==1, :]
-        bd_org_feat_cpu, bd_org_ps_label_cpu = gu.resample_pcd([bd_org_feat_cpu, bd_org_ps_label_cpu], self.config["boundary_sampling_info"]["num_of_bdl_points"], "uniformly")
+        idx = np.random.permutation(bd_org_feat_cpu.shape[0])[:self.config["boundary_sampling_info"]["num_of_bdl_points"]]
+        bd_org_feat_cpu, bd_org_ps_label_cpu = bd_org_feat_cpu[idx], bd_org_ps_label_cpu[idx]
         non_bd_org_feat_cpu = org_feats[bd_labels!=1, :]
         non_bd_org_ps_label_cpu = ps_labels[bd_labels!=1, :]
-        non_bd_org_feat_cpu, non_bd_org_ps_label_cpu = gu.resample_pcd([non_bd_org_feat_cpu, non_bd_org_ps_label_cpu], self.config["boundary_sampling_info"]["num_of_all_points"]-bd_org_feat_cpu.shape[0], "fps")
+        idx = np.random.permutation(non_bd_org_feat_cpu.shape[0])[:self.config["boundary_sampling_info"]["num_of_all_points"]]
+        non_bd_org_feat_cpu, non_bd_org_ps_label_cpu = non_bd_org_feat_cpu[idx], non_bd_org_ps_label_cpu[idx]
         
         results_feat_cpu = np.concatenate([bd_org_feat_cpu, non_bd_org_feat_cpu], axis=0)
         results_label_cpu = np.concatenate([bd_org_ps_label_cpu, non_bd_org_ps_label_cpu], axis=0)

@@ -23,14 +23,17 @@ if args.model_name == "tgnet_fps":
     from models.fps_grouping_network_model import FpsGroupingNetworkModel
     from models.modules.grouping_network_module import GroupingNetworkModule
     model = FpsGroupingNetworkModel(config, GroupingNetworkModule)
+elif args.model_name == "tgnet_bdl":
+    from models.bdl_grouping_netowrk_model import BdlGroupingNetworkModel
+    from models.modules.grouping_network_module import GroupingNetworkModule
+    model = BdlGroupingNetworkModel(config, GroupingNetworkModule)
 if args.model_name == "tsegnet":
     from models.tsegnet_model import TSegNetModel
     from models.modules.tsegnet import TSegNetModule
     model = TSegNetModel(config, TSegNetModule)
 elif args.model_name == "dgcnn":
-    from models.dgcnn_model import DGCnnModel
-    from models.modules.dgcnn import DGCnnModule
-    model = DGCnnModel(config, DGCnnModule)
+    from models.dgcnn import DGCnn
+    model = DGCnn()
 elif args.model_name == "pointnet":
     from models.pointnet import PointNet
     model = PointNet()
@@ -38,12 +41,7 @@ elif args.model_name == "pointnetpp":
     from models.pointnet_pp import PointNetPp
     model = PointNetPp()
 elif args.model_name == "pointtransformer":
-    from models.transformer_model import TransformerModel
-    from models.modules.point_transformer import PointTransformerModule
-    model = TransformerModel(config, PointTransformerModule)
-elif args.model_name == "tgnet_bdl":
-    from models.bdl_grouping_netowrk_model import BdlGroupingNetworkModel
-    from models.modules.grouping_network_module import GroupingNetworkModule
-    model = BdlGroupingNetworkModel(config, GroupingNetworkModule)
+    from models.point_transformer import PointTransformer
+    model = PointTransformer(config)
 
 runner(config, model)

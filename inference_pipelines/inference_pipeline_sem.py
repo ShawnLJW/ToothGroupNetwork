@@ -12,7 +12,7 @@ class InferencePipeLine:
         self.scaler = 1.8
         self.shifter = 0.8
 
-    def __call__(self, mesh):
+    def __call__(self, mesh, pca=False):
         if isinstance(mesh, str):
             _, mesh = gu.read_txt_obj_ls(mesh, ret_mesh=True, use_tri_mesh=True) #TODO slow processing speed
         vertices = np.array(mesh.vertices)
@@ -37,13 +37,6 @@ class InferencePipeLine:
         tree = KDTree(sampled_feats[:,:3], leaf_size=2)
         near_points = tree.query(org_feats[:,:3], k=1, return_distance=False)
         result_ins_labels = cls_pred.reshape(-1)[near_points.reshape(-1)].reshape(-1,1)
-        if False:
-            gu.print_3d(
-                    gu.np_to_pcd_with_label(org_feats[:,:3], result_ins_labels), 
-                )
-            gu.print_3d(
-                gu.np_to_pcd_with_label(org_feats[:,:3], result_sem_labels)
-            )
 
         return {
             "sem":result_ins_labels.reshape(-1),
