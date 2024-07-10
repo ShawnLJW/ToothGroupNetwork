@@ -1,9 +1,10 @@
-gdown
-wandb
-PyYAML
 open3d
-multimethod
-termcolor
 trimesh
-easydict
-./external_libs/pointops
+scikit-learn
+dash
+gunicorn
+ipykernel
+transformers
+accelerate
+wandb
+-e ./external_libs/pointops
