@@ -468,14 +468,15 @@ def pointMLP_seg(num_classes=8, num_channels=24, **kwargs) -> PointMLP:
                  de_dims=[512, 256, 128, 128], de_blocks=[4,4,4,4],
                  gmp_dim=64,cls_dim=64, num_channels=num_channels, **kwargs)
 
-class PointMLP(torch.nn.Module):
+
+class PointMLPMain(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.first_sem_model = pointMLP_seg(num_classes=17, num_channels=3)
 
     def forward(self, feat, gt_seg_label=None):
         
-        cls_pred, feats = self.first_sem_model(feat)
+        cls_pred = self.first_sem_model(feat)
         outputs = {"cls_pred": cls_pred}
         if gt_seg_label is not None:
             outputs["loss"] = tooth_class_loss(cls_pred, gt_seg_label, 17)

@@ -41,8 +41,8 @@ elif args.model_name == "pointnetpp":
     from models.pointnet_pp import PointNetPp
     model = PointNetPp()
 elif args.model_name == "pointmlp":
-    from models.pointmlp import PointMLP
-    model = PointMLP()
+    from models.pointmlp import PointMLPMain
+    model = PointMLPMain()
 elif args.model_name == "pointtransformer":
     from models.point_transformer import PointTransformer
     model = PointTransformer(config)
