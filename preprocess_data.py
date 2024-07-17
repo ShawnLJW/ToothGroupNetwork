@@ -36,9 +36,8 @@ all_labels = []
 for path in tqdm.tqdm(stl_path_ls):
     base_name = os.path.basename(path).split(".")[0]
     loaded_json = gu.load_json(json_path_map[base_name])
-    labels = np.array(loaded_json['labels']).reshape(-1,1)
-    if loaded_json['jaw'] == 'lower':
-        labels -= 20
+    labels = np.array(loaded_json['labels'])
+    labels[labels>30] -= 20
     labels[labels//10==1] %= 10
     labels[labels//10==2] = (labels[labels//10==2]%10) + 8
     labels[labels<0] = 0
@@ -48,7 +47,7 @@ for path in tqdm.tqdm(stl_path_ls):
     vertices[:,:3] -= np.mean(vertices[:,:3], axis=0)
     vertices[:, :3] = ((vertices[:, :3]-Y_AXIS_MIN)/(Y_AXIS_MAX - Y_AXIS_MIN))*2-1
 
-    labeled_vertices = np.concatenate([vertices,labels], axis=1)
+    labeled_vertices = np.concatenate([vertices, labels.reshape(-1,1)], axis=1)
 
     name_id = str(base_name)
     labeled_vertices = gu.resample_pcd(labeled_vertices, 24000)
