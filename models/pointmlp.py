@@ -29,7 +29,7 @@ def get_activation(activation):
 def square_distance(src, dst):
     """
     Calculate Euclid distance between each two points.
-    src^T * dst = xn * xm + yn * ym + zn * zm；
+    src^T * dst = xn * xm + yn * ym + zn * zm;
     sum(src^2, dim=-1) = xn*xn + yn*yn + zn*zn;
     sum(dst^2, dim=-1) = xm*xm + ym*ym + zm*zm;
     dist = (xn - xm)^2 + (yn - ym)^2 + (zn - zm)^2
@@ -340,8 +340,7 @@ class PointMLP(nn.Module):
         self.stages = len(pre_blocks)
         self.class_num = num_classes
         self.points = points
-        #self.embedding = ConvBNReLU1D(6, embed_dim, bias=bias, activation=activation)
-        self.embedding = ConvBNReLU1D(3, embed_dim, bias=bias, activation=activation)
+        self.embedding = ConvBNReLU1D(num_channels, embed_dim, bias=bias, activation=activation)
         assert len(pre_blocks) == len(k_neighbors) == len(reducers) == len(pos_blocks) == len(dim_expansion), \
             "Please check stage number consistent for pre_blocks, pos_blocks k_neighbors, reducers."
         self.local_grouper_list = nn.ModuleList()
@@ -472,7 +471,7 @@ def pointMLP_seg(num_classes=8, num_channels=24, **kwargs) -> PointMLP:
 class PointMLPMain(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.first_sem_model = pointMLP_seg(num_classes=17, num_channels=3)
+        self.first_sem_model = pointMLP_seg(num_classes=17, num_channels=6)
 
     def forward(self, feat, gt_seg_label=None):
         
