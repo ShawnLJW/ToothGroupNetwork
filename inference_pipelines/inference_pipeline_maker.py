@@ -1,6 +1,6 @@
 from models.modules.tsegnet import TSegNetModule
 import torch
-def make_inference_pipeline(model_name, ckpt_path_ls, pca=False):
+def make_inference_pipeline(model_name, ckpt_path_ls):
     from inference_pipelines.inference_pipeline_tsegnet import InferencePipeLine
     if model_name=="tsegnet":
         inference_config = {
@@ -66,21 +66,21 @@ def make_inference_pipeline(model_name, ckpt_path_ls, pca=False):
         module = PointNet()
         module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
-        return InferencePipeLine(module, pca=pca)
+        return InferencePipeLine(module)
     elif model_name=="pointnetpp":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.pointnet_pp import PointNetPp
         module = PointNetPp()
         module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
-        return InferencePipeLine(module, pca=pca)
+        return InferencePipeLine(module)
     elif model_name=="dgcnn":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.dgcnn import DGCnn
         module = DGCnn()
         module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
-        return InferencePipeLine(module, pca=pca)
+        return InferencePipeLine(module)
     elif model_name=="pointtransformer":
         inference_config = {
             "model_info":{
@@ -101,6 +101,6 @@ def make_inference_pipeline(model_name, ckpt_path_ls, pca=False):
         module = PointTransformer(inference_config["model_info"])
         module.load_state_dict(torch.load(ckpt_path_ls[0]))
         module.cuda()
-        return InferencePipeLine(module, pca=pca)
+        return InferencePipeLine(module)
     else:
         raise "undefined model"
