@@ -2,7 +2,9 @@ open3d
 trimesh
 scikit-learn
 dash
-gunicorn
+torch_scatter
+spconv-cu120
+timm
 ipykernel
 transformers
 accelerate
