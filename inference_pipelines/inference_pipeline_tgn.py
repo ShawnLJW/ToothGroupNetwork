@@ -6,6 +6,8 @@ import ops_utils as tu
 from sklearn.neighbors import KDTree
 from sklearn.decomposition import PCA
 import open3d as o3d
+import trimesh
+from sklearn.decomposition import PCA
 
 class InferencePipeLine:
     def __init__(self, config):
@@ -21,11 +23,22 @@ class InferencePipeLine:
         self.bdl_module.cuda()
         self.bdl_module.load_state_dict(torch.load(self.config["boundary_model_info"]["load_ckpt_path"]))
 
-    def __call__(self, mesh):
-        DEBUG=False
+    def __call__(self, mesh, pca=False):
         if isinstance(mesh, str):
-            _, mesh = gu.read_txt_obj_ls(mesh, ret_mesh=True, use_tri_mesh=True) #TODO slow processing speed
-        mesh = mesh.remove_duplicated_vertices()
+            tri_mesh_loaded_mesh = trimesh.load_mesh(mesh, process=True)
+            vertex_ls = np.array(tri_mesh_loaded_mesh.vertices)
+            tri_ls = np.array(tri_mesh_loaded_mesh.faces)+1
+            mesh = o3d.geometry.TriangleMesh()
+            mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
+            mesh.triangles = o3d.utility.Vector3iVector(np.array(tri_ls)-1)
+            mesh.compute_vertex_normals()
+        
+        if pca:
+            vertex_ls = PCA(n_components=3).fit_transform(mesh.vertices)
+            vertex_ls[:, 1] *= -1
+            mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
+            mesh.compute_vertex_normals()
+            
         vertices = np.array(mesh.vertices)
         n_vertices = vertices.shape[0]
         vertices[:,:3] -= np.mean(vertices[:,:3], axis=0)
@@ -56,8 +69,6 @@ class InferencePipeLine:
         input_cuda_bdl_feats = torch.from_numpy(np.array([sampled_boundary_feats.astype('float32')])).permute(0,2,1).cuda()
         sampled_boundary_seg_label = torch.from_numpy(np.array([sampled_boundary_seg_label.astype(int)])).permute(0,2,1).cuda() - 1
         bdl_results = self.get_second_module_results(input_cuda_bdl_feats, sampled_boundary_seg_label, self.bdl_module)
-        
-        if DEBUG: gu.print_3d(gu.np_to_pcd_with_label(first_results["ins"]["full_ins_labeled_points"]), gu.np_to_pcd_with_label(bdl_results["ins"]["full_ins_labeled_points"]))
 
         first_xyz = first_results["ins"]["full_ins_labeled_points"][:,:3]
         first_ps_label = first_results["ins"]["full_ins_labeled_points"][:,3].astype(int)
@@ -139,13 +150,6 @@ class InferencePipeLine:
         near_points = tree.query(org_feats[:,:3], k=1, return_distance=False)
         result_ins_labels = final_ins_labels.reshape(-1)[near_points.reshape(-1)].reshape(-1,1)
         result_sem_labels = final_sem_labels.reshape(-1)[near_points.reshape(-1)].reshape(-1,1)
-        if DEBUG:
-            gu.print_3d(
-                gu.np_to_pcd_with_label(org_feats[:,:3], result_ins_labels), 
-            )
-            gu.print_3d(
-                gu.np_to_pcd_with_label(org_feats[:,:3], result_sem_labels)
-            )
 
         result_sem_labels[result_sem_labels>=9] += 2
         result_sem_labels[result_sem_labels>0] += 10
