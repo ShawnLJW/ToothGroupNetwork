@@ -15,6 +15,7 @@ runs/
 ckpts/
 *.pt
 *.h5
+*.ipynb
 
 # Distribution / packaging
 .Python
