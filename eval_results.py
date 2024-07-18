@@ -67,12 +67,13 @@ def cal_metric(
 def evaluate_model(model_name, pca=False):
     print(f"evaluating {model_name}{'' if not pca else '_pca'}")
     IoU_total, F1_total, Acc_total, SEM_ACC_total, n = 0, 0, 0, 0, 0
-    pipeline = make_inference_pipeline(model_name, [f"ckpts/{model_name}.h5"], pca=pca)
+    pipeline = make_inference_pipeline(model_name, [f"ckpts/{model_name}.h5"])
+    name = f"{model_name}{'' if not pca else '_pca'}"
+    model_results = []
 
     for i in trange(len(scan_list)):
-        preds = pipeline(scan_list[i])
-        gt = gu.load_json(gt_list[i])
-        gt = np.array(gt["labels"])
+        preds = pipeline(scan_list[i], pca)
+        gt = gu.load_labels(gt_list[i])
 
         IoU, F1, Acc, SEM_ACC, _ = cal_metric(
             gt, preds["sem"], preds["ins"], is_half=True
@@ -82,9 +83,20 @@ def evaluate_model(model_name, pca=False):
         Acc_total += Acc
         SEM_ACC_total += SEM_ACC
         n += 1
+        
+        model_results.append({
+            "file_path": scan_list[i],
+            "IoU": IoU,
+            "F1": F1,
+            "Acc": Acc,
+            "SEM_ACC": SEM_ACC,
+        })
+    
+    model_results = pd.DataFrame(model_results)
+    model_results.to_csv(f"results_{name}.csv", index=False)
 
     return {
-        "model_name": f"{model_name}{'' if not pca else '_pca'}",
+        "model_name": name,
         "IoU": IoU_total / n,
         "F1": F1_total / n,
         "Acc": Acc_total / n,
