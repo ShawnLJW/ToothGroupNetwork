@@ -3,12 +3,10 @@ from torch.utils.data import Dataset
 import os
 import numpy as np
 from glob import glob
-from torch.utils.data import Dataset
 import copy
 import augmentator as aug
 
 class DentalModelGenerator(Dataset):
-    # def __init__(self, data_dir=None, split_with_txt_path=None, aug_obj_str=None):
     def __init__(self, data_dir=None, split_with_txt_path=None, scaling_range=None, rotation_range=None, rotation_axis=None, translation_range=None):
         self.data_dir = data_dir
         self.mesh_paths = glob(os.path.join(data_dir,"*_sampled_points.npy"))
@@ -29,17 +27,15 @@ class DentalModelGenerator(Dataset):
                     temp_ls.append(self.mesh_paths[i])
             self.mesh_paths = temp_ls
 
-        # if aug_obj_str is not None:
-        #     self.aug_obj = eval(aug_obj_str)
-        # else:
-        #     self.aug_obj = None
-
-        if scaling_range and rotation_range and rotation_axis and translation_range:
-            aug_list = [
-                aug.Scaling(scaling_range),
-                aug.Rotation(rotation_range, rotation_axis),
-                aug.Translation(translation_range)
-            ]
+        aug_list = []
+        if scaling_range:
+            aug_list.append(aug.Scaling(scaling_range))
+        if rotation_range and rotation_axis:
+            aug_list.append(aug.Rotation(rotation_range, rotation_axis))
+        if translation_range:
+            aug_list.append(aug.Translation(translation_range))
+            
+        if len(aug_list) > 0:
             self.aug_obj = aug.Augmentator(aug_list)
         else:
             self.aug_obj = None        
@@ -84,8 +80,14 @@ class DentalModelGenerator(Dataset):
 #for test
 if __name__ == "__main__":
     import gen_utils as gu
-    #data_generator = DentalModelGenerator("example_data/split_info/train_fold.txt", "aug.Augmentator([aug.Scaling([0.85, 1.15]), aug.Rotation([-30,30], 'fixed'), aug.Translation([-0.2, 0.2])])")
-    data_generator = DentalModelGenerator("example_data/processed_data", "aug.Augmentator([aug.Flip(), aug.Scaling([0.85, 1.15]), aug.Rotation([-30,30], 'fixed'), aug.Translation([-0.2, 0.2])])")
+    data_generator = DentalModelGenerator(
+        data_dir="data_preprocessed_path",
+        split_with_txt_path="base_name_train_fold.txt",
+        scaling_range=[0.85, 1.15],
+        rotation_range=[-30, 30],
+        rotation_axis="fixed",
+        translation_range=[-0.2, 0.2]
+    )
     for batch in data_generator:
         for key in batch.keys():
             if type(batch[key]) == torch.Tensor:
