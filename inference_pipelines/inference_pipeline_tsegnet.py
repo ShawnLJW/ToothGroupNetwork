@@ -1,10 +1,12 @@
 import gen_utils as gu
 import numpy as np
 import torch
+import trimesh
 import ops_utils as tu
 from sklearn.neighbors import KDTree
 import open3d as o3d
 from sklearn.cluster import DBSCAN
+from sklearn.decomposition import PCA
 
 class InferencePipeLine:
     def __init__(self, model):
@@ -13,10 +15,22 @@ class InferencePipeLine:
         self.scaler = 1.8
         self.shifter = 0.8
 
-    def __call__(self, mesh):
-        DEBUG=False
+    def __call__(self, mesh, pca=False):
         if isinstance(mesh, str):
-            _, mesh = gu.read_txt_obj_ls(mesh, ret_mesh=True, use_tri_mesh=True) #TODO slow processing speed
+            tri_mesh_loaded_mesh = trimesh.load_mesh(mesh, process=True)
+            vertex_ls = np.array(tri_mesh_loaded_mesh.vertices)
+            tri_ls = np.array(tri_mesh_loaded_mesh.faces)+1
+            mesh = o3d.geometry.TriangleMesh()
+            mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
+            mesh.triangles = o3d.utility.Vector3iVector(np.array(tri_ls)-1)
+            mesh.compute_vertex_normals()
+        
+        if pca:
+            vertex_ls = PCA(n_components=3).fit_transform(mesh.vertices)
+            vertex_ls[:, 1] *= -1
+            mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
+            mesh.compute_vertex_normals()
+            
         vertices = np.array(mesh.vertices)
         n_vertices = vertices.shape[0]
         vertices[:,:3] -= np.mean(vertices[:,:3], axis=0)
