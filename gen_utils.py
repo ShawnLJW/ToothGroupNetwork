@@ -68,11 +68,12 @@ def get_colored_mesh(mesh, labels):
         [64,64,64],
     ])/255
     palte[9:] *= 0.4
-    labels[labels>30] -= 20
-    labels[labels//10==1] %= 10
-    labels[labels//10==2] = (labels[labels//10==2]%10) + 8
-    labels[labels<0] = 0
-    label_colors = palte[labels]
+    label_colors = labels.copy()
+    label_colors[label_colors>30] -= 20
+    label_colors[label_colors//10==1] %= 10
+    label_colors[label_colors//10==2] = (label_colors[label_colors//10==2]%10) + 8
+    label_colors[label_colors<0] = 0
+    label_colors = palte[label_colors]
     mesh.vertex_colors = o3d.utility.Vector3dVector(label_colors)
     return mesh
 
