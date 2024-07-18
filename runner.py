@@ -36,13 +36,21 @@ def collate_fn(batch):
 def get_generator_set(config):
     train_ds = DentalModelGenerator(
         config["input_data_dir_path"],
-        aug_obj_str=config["aug_obj_str"],
+        # aug_obj_str=config["aug_obj_str"],
+        scaling_range=config["scaling_range"],
+        rotation_range=config["rotation_range"],
+        rotation_axis=config["rotation_axis"],
+        translation_range=config["translation_range"],
         split_with_txt_path=config["train_data_split_txt_path"],
     )
 
     val_ds = DentalModelGenerator(
         config["input_data_dir_path"],
-        aug_obj_str=None,
+        # aug_obj_str=None,
+        scaling_range=None,
+        rotation_range=None,
+        rotation_axis=None,
+        translation_range=None,
         split_with_txt_path=config["val_data_split_txt_path"],
     )
     
