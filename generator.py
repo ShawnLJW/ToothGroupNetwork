@@ -8,7 +8,8 @@ import copy
 import augmentator as aug
 
 class DentalModelGenerator(Dataset):
-    def __init__(self, data_dir=None, split_with_txt_path=None, aug_obj_str=None):
+    # def __init__(self, data_dir=None, split_with_txt_path=None, aug_obj_str=None):
+    def __init__(self, data_dir=None, split_with_txt_path=None, scaling_range=None, rotation_range=None, rotation_axis=None, translation_range=None):
         self.data_dir = data_dir
         self.mesh_paths = glob(os.path.join(data_dir,"*_sampled_points.npy"))
         
@@ -28,10 +29,20 @@ class DentalModelGenerator(Dataset):
                     temp_ls.append(self.mesh_paths[i])
             self.mesh_paths = temp_ls
 
-        if aug_obj_str is not None:
-            self.aug_obj = eval(aug_obj_str)
+        # if aug_obj_str is not None:
+        #     self.aug_obj = eval(aug_obj_str)
+        # else:
+        #     self.aug_obj = None
+
+        if scaling_range and rotation_range and rotation_axis and translation_range:
+            aug_list = [
+                aug.Scaling(scaling_range),
+                aug.Rotation(rotation_range, rotation_axis),
+                aug.Translation(translation_range)
+            ]
+            self.aug_obj = aug.Augmentator(aug_list)
         else:
-            self.aug_obj = None
+            self.aug_obj = None        
 
 
     def __len__(self):
