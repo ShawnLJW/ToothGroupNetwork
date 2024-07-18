@@ -1,3 +1,4 @@
+import argparse
 import base64
 import io
 import numpy as np
@@ -8,9 +9,15 @@ from dash import Dash, html, ctx, dcc, callback, Output, Input, State, MATCH, AL
 import trimesh
 from inference_pipelines.inference_pipeline_maker import make_inference_pipeline
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--model_name", default="tgnet", help="tgnet | tsegnet | pointtransformer | pointnetpp | pointnet | dgcnn")
+parser.add_argument("--ckpt", default="ckpts/tgnet_fps.h5", help="Path to the checkpoint file")
+parser.add_argument("--ckpt_bdl", default="ckpts/tgnet_bdl.h5", help="Path to the checkpoint file for tgnet BDL module")
+args = parser.parse_args()
+
 pipeline = make_inference_pipeline(
-    model_name="tgnet",
-    ckpt_path_ls=["ckpts/tgnet_fps.h5", "ckpts/tgnet_bdl.h5"],
+    model_name = args.model_name,
+    ckpt_path_ls = [args.ckpt, args.ckpt_bdl],
 )
 
 FDI_NUMBERING = {
@@ -153,11 +160,15 @@ def label_teeth(n_clicks, figure):
     mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
     mesh.triangles = o3d.utility.Vector3iVector(tri_ls)
     mesh.compute_vertex_normals()
-    outputs = pipeline(mesh)
-    instances = np.array(outputs["ins"])
-    labels = label_map(np.array(outputs["sem"]))
-    mesh = gu.get_colored_mesh(mesh, instances)
-    return get_plotly_mesh(mesh, labels)
+    try:
+        outputs = pipeline(mesh, pca=True)
+        labels = np.array(outputs["sem"])
+        mesh = gu.get_colored_mesh(mesh, labels)
+        return get_plotly_mesh(mesh, label_map(labels))
+    except Exception as e:
+        print("Error in labeling teeth")
+        print(e)
+        return figure
 
 def upload_box():
     return dcc.Upload(
@@ -177,6 +188,7 @@ def upload_box():
     )
 
 app = Dash(__name__)
+server = app.server
 app.layout = [
     html.H1(children="Teeth Segmentation", style={"textAlign":"center"}),
     html.Div(
@@ -193,4 +205,4 @@ app.layout = [
 ]
 
 if __name__ == "__main__":
-    app.run_server(host="127.0.0.1", port="8050", debug=True)
+    app.run(host="127.0.0.1", debug=True)
