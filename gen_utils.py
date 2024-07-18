@@ -191,6 +191,19 @@ def save_json(file_path, json_obj):
 
         json.dump(json_obj, json_file)
 
+def load_labels(file_path):
+    with open(file_path, "r") as f:
+        if file_path.endswith(".txt"):
+            gt = [int(x) for x in f.read().split("\n") if x != ""]
+            gt = np.array(gt)
+            gt[gt > 8] = 7 - gt[gt > 8]
+            gt[gt != 0] = 19 - gt[gt != 0]
+        elif file_path.endswith(".json"):
+            gt = json.load(f)["labels"]
+            gt = np.array(gt)
+            
+    return gt
+
 def read_txt(file_path):
     f = open(file_path, 'r')
     path_ls = []
