@@ -133,9 +133,14 @@ def read_mesh(contents, filename):
     label_button = html.Button(
         "Label Teeth",
         id={"type": "label-button", "index": 0}
-    ) 
+    )
+    option_toggles = dcc.Checklist(
+        ["PCA"],
+        inline=True,
+        id={"type": "option-toggles", "index": 0}
+    )
     button_row = html.Div(
-        [clear_button, label_button],
+        [clear_button, label_button, option_toggles],
         style={
             "display":"flex",
             "justify-content":"center",
@@ -150,9 +155,10 @@ def read_mesh(contents, filename):
     Output({"type": "mesh-object", "index": MATCH}, "figure"),
     Input({"type": "label-button", "index": MATCH}, "n_clicks"),
     State({"type": "mesh-object", "index": MATCH}, "figure"),
+    State({"type": "option-toggles", "index": MATCH}, "value"),
     prevent_initial_call=True
 )
-def label_teeth(n_clicks, figure):
+def label_teeth(n_clicks, figure, value):
     plotly_mesh = figure["data"][0]
     vertex_ls = np.column_stack([plotly_mesh["x"], plotly_mesh["y"], plotly_mesh["z"]])
     tri_ls = np.column_stack([plotly_mesh["i"], plotly_mesh["j"], plotly_mesh["k"]])
@@ -160,8 +166,14 @@ def label_teeth(n_clicks, figure):
     mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
     mesh.triangles = o3d.utility.Vector3iVector(tri_ls)
     mesh.compute_vertex_normals()
+    
+    if value:
+        pca = ("PCA" in value)
+    else:
+        pca = False
+        
     try:
-        outputs = pipeline(mesh, pca=True)
+        outputs = pipeline(mesh, pca)
         labels = np.array(outputs["sem"])
         mesh = gu.get_colored_mesh(mesh, labels)
         return get_plotly_mesh(mesh, label_map(labels))
