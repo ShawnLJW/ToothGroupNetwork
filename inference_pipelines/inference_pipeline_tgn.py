@@ -25,13 +25,7 @@ class InferencePipeLine:
 
     def __call__(self, mesh, pca=False):
         if isinstance(mesh, str):
-            tri_mesh_loaded_mesh = trimesh.load_mesh(mesh, process=True)
-            vertex_ls = np.array(tri_mesh_loaded_mesh.vertices)
-            tri_ls = np.array(tri_mesh_loaded_mesh.faces)+1
-            mesh = o3d.geometry.TriangleMesh()
-            mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
-            mesh.triangles = o3d.utility.Vector3iVector(np.array(tri_ls)-1)
-            mesh.compute_vertex_normals()
+            _, mesh = gu.load_mesh(mesh)
         
         if pca:
             vertex_ls = PCA(n_components=3).fit_transform(mesh.vertices)
