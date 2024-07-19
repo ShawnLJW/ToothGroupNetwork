@@ -1,7 +1,8 @@
 import os
 import numpy as np
 import gen_utils as gu
-
+import open3d as o3d
+from sklearn.decomposition import PCA
 
 def read_txt_labels(path):
     labels = [int(x) for x in f.read().split("\n") if x != ""]
@@ -26,6 +27,10 @@ for id in ids:
     
     if os.path.isfile(jaw_path) and os.path.isfile(label_path):
         feats, mesh = gu.load_mesh(jaw_path)
+        vertex_ls = PCA(n_components=3).fit_transform(mesh.vertices)
+        vertex_ls[:, 1] *= -1
+        mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
+        mesh.compute_vertex_normals() 
         labels = read_txt_labels(label_path)
         labeled_vertices = np.concatenate([feats, labels.reshape(-1,1)], axis=1)
         labeled_vertices = gu.resample_pcd(labeled_vertices, 24000)
