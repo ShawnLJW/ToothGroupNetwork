@@ -33,5 +33,7 @@ for id in ids:
         mesh.compute_vertex_normals() 
         labels = read_txt_labels(label_path)
         labeled_vertices = np.concatenate([feats, labels.reshape(-1,1)], axis=1)
-        labeled_vertices = gu.resample_pcd(labeled_vertices, 24000)
+        gums_vertices = gu.resample_pcd(labeled_vertices[labels == 0], 12000)
+        teeth_vertices = gu.resample_pcd(labeled_vertices[labels != 0], 12000)
+        labeled_vertices = np.concatenate([gums_vertices, teeth_vertices], axis=0)
         np.save(f"{output_dir}/{id}_sampled_points", labeled_vertices)
