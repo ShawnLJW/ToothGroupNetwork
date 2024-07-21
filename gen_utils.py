@@ -4,6 +4,7 @@ import torch
 import os
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KDTree
+from safetensors import safe_open
 import json
 from external_libs.pointops.functions import pointops
 import trimesh
@@ -115,7 +116,7 @@ def resample_pcd(pcd, n):
     elif pcd.shape[0] > n:
         idx = fps(pcd[:,:3], n)
     elif pcd.shape[0] < n:
-        idx = torch.randint(0, pcd.shape[0], (24000,))
+        idx = torch.randint(0, pcd.shape[0], (n,))
     return pcd[idx] 
 
 def fps(xyz, npoint):
@@ -214,3 +215,15 @@ def load_mesh(path):
     feats = np.concatenate([vertex_ls,norms], axis=1)
 
     return feats, mesh
+
+def load_checkpoint(path):
+    if path.endswith(".pt") or path.endswith(".pth") or path.endswith(".h5"):
+        return torch.load(path)
+    elif path.endswith(".safetensors"):
+        tensors = {}
+        with safe_open(path, "pt") as f:
+            for key in f.keys():
+                tensors[key] = f.get_tensor(key)
+        return tensors
+    else:
+        raise ValueError("Unknown file format")
