@@ -5,10 +5,10 @@ import open3d as o3d
 from sklearn.decomposition import PCA
 
 def read_txt_labels(path):
-    labels = [int(x) for x in f.read().split("\n") if x != ""]
-    labels = np.array(labels)
-    labels[labels >= 9] = 7 - labels[labels >= 9]
-    labels[labels != 0] = 19 - labels[labels != 0]
+    with open(path, "r") as f:
+        labels = [int(x) for x in f.read().split("\n") if x != ""]
+        labels = np.array(labels)
+        labels[np.logical_and(labels > 0, labels <= 8)] = (9 - labels[np.logical_and(labels > 0, labels <= 8)])
     
     return labels
 

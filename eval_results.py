@@ -17,7 +17,11 @@ for id in ids:
     
 def evaluate_model(model_name, pca=False):
     print(f"evaluating {model_name}{'' if not pca else '_pca'}")
-    pipeline = make_inference_pipeline(model_name, [f"ckpts/{model_name}.h5"])
+    if model_name == "tgnet":
+        pipeline = make_inference_pipeline(model_name, ["ckpts/tgnet_fps.h5", "ckpts/tgnet_bdl.h5"])
+    else:
+        pipeline = make_inference_pipeline(model_name, [f"ckpts/{model_name}.h5"])
+        
     name = f"{model_name}{'' if not pca else '_pca'}"
     model_results = []
 
@@ -26,11 +30,11 @@ def evaluate_model(model_name, pca=False):
         vertices = feats[:, :3]
         outputs = pipeline(mesh, pca)
         
-        gt = gu.load_json(gt_list[i])
+        gt = gu.load_labels(gt_list[i])
         metrics = calculate_metrics(
             vertices,
-            np.array(gt["instances"]),
-            np.array(gt["labels"]),
+            gt,
+            gt,
             outputs["ins"],
             outputs["sem"],
         )
@@ -43,7 +47,7 @@ def evaluate_model(model_name, pca=False):
     summary_results = {"model_name": name}
     summary_results.update(model_results.mean(numeric_only=True).to_dict())
     return summary_results
-    
+
 models = [
     "dgcnn",
     "pointnet",
