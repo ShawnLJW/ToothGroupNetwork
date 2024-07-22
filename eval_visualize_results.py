@@ -24,11 +24,11 @@ if __name__ == "__main__":
     mesh = gu.get_colored_mesh(mesh, outputs["sem"])
     
     if args.labels_path:
-        labels = gu.load_json(args.labels_path)
+        labels = gu.load_labels(args.labels_path)
         metrics = calculate_metrics(
             vertices,
-            np.array(labels["instances"]),
-            np.array(labels["labels"]),
+            labels,
+            labels,
             outputs["ins"],
             outputs["sem"],
         )
