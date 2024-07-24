@@ -1,7 +1,7 @@
-from models.modules.tsegnet import TSegNetModule
-import torch
+import gen_utils as gu
 def make_inference_pipeline(model_name, ckpt_path_ls):
     from inference_pipelines.inference_pipeline_tsegnet import InferencePipeLine
+    from models.modules.tsegnet import TSegNetModule
     if model_name=="tsegnet":
         inference_config = {
             "model_info":{
@@ -20,7 +20,7 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
         }
 
         module = TSegNetModule(inference_config)
-        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     elif model_name=="tgnet":
@@ -64,28 +64,28 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.pointnet import PointNet
         module = PointNet()
-        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     elif model_name=="pointnetpp":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.pointnet_pp import PointNetPp
         module = PointNetPp()
-        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     elif model_name=="dgcnn":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.dgcnn import DGCnn
         module = DGCnn()
-        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     elif model_name=="pointtransformer":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.point_transformer import PointTransformer
         module = PointTransformer()
-        module.load_state_dict(torch.load(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
         module.cuda()
         return InferencePipeLine(module)
     else:
