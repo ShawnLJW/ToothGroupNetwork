@@ -1,18 +1,82 @@
-# ToothGroupNetwork
-- Team CGIP
-- Ho Yeon Lim and Min Chang Kim 
+# Teeth Segmentation Models
 
-# Notice
-- Please press the star!
-- This repository contains the code for the tooth segmentation algorithm that won first place at [Miccai2022 3D Teeth Scan Segmentation and Labeling Challenge.](https://3dteethseg.grand-challenge.org/evaluation/challenge/leaderboard/)
-- Official Paper for Challenge: [3DTeethSeg'22: 3D Teeth Scan Segmentation and Labeling Challenge.](https://arxiv.org/abs/2305.18277)
-- We used the dataset shared in [the challenge git repository.](https://github.com/abenhamadou/3DTeethSeg22_challenge)
-- If you only want the inference code, or if you want to use the same checkpoints that we used in the challenge, you can jump to [challenge_branch](https://github.com/limhoyeon/ToothGroupNetwork/tree/challenge_branch) in this repository.
-- Most of the code has been modified. It may be significantly different from the code you downloaded before June 20th. If you downloaded this repository, we recommend download it again.
-- There may be a lot of errors in the initial code. If you encounter any errors, please post them on the issue board, and we will promptly address and fix them(Im sorry for the slow resposes to issues because of personal reasons)...
-- Please post your questions to the issue board as it's hard to see them in emails.
+This repository provides a collection of models for tooth segmentation on 3D intraoral scans.
 
-# Dataset
+![Teeth Segmentation](assets/example.png)
+
+## Contents
+
+- [Setup](#setup)
+- [Models Available](#models-available)
+- [Inference with Python](#inference-with-python)
+- [Training](#training)
+
+## Setup
+
+Ensure that [CUDA toolkit](https://developer.nvidia.com/cuda-downloads) version 12.4 is installed on your system. Otherwise, you might see `OSError: CUDA_HOME environment variable is not set. Please set it to your CUDA install root.` as The CUDA toolkit provided by conda is not a complete installation.
+
+On Linux, you may also have to install dependencies for Open3D with:
+
+```bash
+apt-get update && apt-get install --no-install-recommends -y \
+    libegl1 \
+    libgl1 \
+    libgomp1
+```
+
+After all dependencies are installed, you can create a conda environment with:
+
+```bash
+conda env create -f environment.yml
+```
+
+## Models Available
+
+- Point Transformer
+- PointNet++
+- PointNet
+
+## Inference with Python
+
+Teeth segmentation can be performed in Python:
+
+```python
+import gen_utils as gu
+from inference_pipelines.inference_pipeline_maker import make_inference_pipeline
+
+pipeline = make_inference_pipeline(
+    model_name = "tgnet",
+    ckpt_path = "ckpts/tgnet_fps.h5",
+    bdl_ckpt_path = "ckpts/tgnet_bdl.h5"
+)
+
+feats, mesh = gu.load_mesh("input_mesh.obj")
+outputs = pipeline(mesh)
+mesh = gu.get_colored_mesh(mesh, outputs["sem"])
+gu.print_3d(mesh)
+```
+
+The inference pipeline takes in either a mesh object 
+
+## Training
+
+Start training with the following command:
+
+```bash
+python train.py \
+  --run_name experiment1 \
+  --model_name pointtransformer
+```
+
+By default, models are trained with the AdamW optimizer for 60 epochs with a weight decay of 1e-4. The learning rate starts at 0.001, then decays to 0 with a cosine schedule. The batch size is 16.
+
+For a full list of arguments, enter:
+
+```bash
+python train.py --help
+```
+
+## Dataset
 
 We created a script to download the dataset used by [Tooth Group Network](https://github.com/limhoyeon/ToothGroupNetwork) from [google drive](https://drive.google.com/drive/u/1/folders/15oP0CZM_O_-Bir18VbSM8wRUEzoyLXby).
 
@@ -62,13 +126,10 @@ python preprocess_data.py \
 --source_json_data_path data_json_parent_directory
 ```
 
-## Training
-- We offer six models(tsegnet | tgnet(ours) | pointnet | pointnetpp | dgcnn | pointtransformer).
-- For experiment tracking, we use [wandb](https://wandb.ai/site). Please replace "entity" with your own wandb ID in the `get_default_config function` of `train_configs/train_config_maker.py`.
-- Due to the memory constraints, all functions have been implemented based on batch size 1 (minimum 11GB GPU RAM required). If you want to change the batch size to a different value, you will need to modify most of the functions by yourself.
 
 ### 1. tgnet(Ours)
-- The tgnet is our 3d tooth segmentation method. Please refer to the [challenge paper](https://arxiv.org/abs/2305.18277) for an explanation of the methodology.
+
+- The tgnet is our 3d tooth segmentation method. Please refer to the [challenge paper]() for an explanation of the methodology.
 - You should first train the Farthest Point Sampling model and then train the Boundary Aware Point Sampling model.
 - First, train the Farthest Point Sampling model as follows.
   ```
@@ -97,7 +158,7 @@ python preprocess_data.py \
 
 ### 2. tsegnet
 
-- This is the implementation of model [TSegNet](https://enigma-li.github.io/projects/tsegNet/TSegNet.html). Please refer to the paper for detail.
+- This is the implementation of model . Please refer to the paper for detail.
 - First, The centroid prediction module has to be trained first in tsegnet. To train the centroid prediction module, please modify the `run_tooth_seg_mentation_module` parameter to False in the `train_configs/tsegnet.py` file.
   ![image](https://github.com/limhoyeon/ToothGroupNetwork/assets/70117866/c37eb2ac-b36d-4ca9-a014-b785fd556c35)
 - And train the centroid prediction module by entering the following command.

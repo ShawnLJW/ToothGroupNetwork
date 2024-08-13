@@ -1,0 +1,21 @@
+name: teethseg
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip=24.2
+  - ninja=1.10.2
+  - numpy=1.26.4
+  - pytorch=2.4.0
+  - pytorch-cuda=12.4
+  - pip:
+    - open3d==0.18.0
+    - trimesh==4.4.4
+    - safetensors==0.4.4
+    - Pointcept/libs/pointops
+variables:
+  TORCH_CUDA_ARCH_LIST: "5.2 6.0 6.1 7.0 7.2 7.5 8.0 8.6 8.7+PTX"
+  
