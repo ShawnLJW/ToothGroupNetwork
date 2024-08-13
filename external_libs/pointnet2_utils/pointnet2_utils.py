@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from time import time
 import numpy as np
-from external_libs.pointops.functions import pointops
+import pointops
 
 def timeit(tag, t):
     print("{}: {}s".format(tag, time() - t))

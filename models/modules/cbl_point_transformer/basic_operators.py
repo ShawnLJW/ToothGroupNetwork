@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from external_libs.pointops.functions import pointops
+import pointops
 
 _inf = 1e9
 _eps = 1e-12

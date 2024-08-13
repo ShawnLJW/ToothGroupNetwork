@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import numpy as np
-from external_libs.pointops.functions import pointops
+import pointops
 from .utils import *
 from .basic_operators import *
 from .basic_operators import _eps, _inf

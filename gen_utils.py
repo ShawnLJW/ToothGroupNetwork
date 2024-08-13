@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import KDTree
 from safetensors import safe_open
 import json
-from external_libs.pointops.functions import pointops
+import pointops
 import trimesh
 
 def np_to_pcd(arr, color=[1,0,0]):
