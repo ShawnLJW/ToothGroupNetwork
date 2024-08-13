@@ -123,7 +123,7 @@ def fps(xyz, npoint):
     if xyz.shape[0]<=npoint:
         raise "new fps error"
     xyz = torch.from_numpy(np.array(xyz)).type(torch.float).cuda()
-    idx = pointops.furthestsampling(xyz, torch.tensor([xyz.shape[0]]).cuda().type(torch.int), torch.tensor([npoint]).cuda().type(torch.int)) 
+    idx = pointops.farthest_point_sampling(xyz, torch.tensor([xyz.shape[0]]).cuda().type(torch.int), torch.tensor([npoint]).cuda().type(torch.int)) 
     return torch_to_numpy(idx).reshape(-1)
 
 def print_3d(*data_3d_ls, wireframe=False, back_face=True):
@@ -205,10 +205,10 @@ def read_txt(file_path):
 def load_mesh(path):
     tri_mesh_loaded_mesh = trimesh.load_mesh(path, process=True)
     vertex_ls = np.array(tri_mesh_loaded_mesh.vertices)
-    tri_ls = np.array(tri_mesh_loaded_mesh.faces)+1
+    tri_ls = np.array(tri_mesh_loaded_mesh.faces)
     mesh = o3d.geometry.TriangleMesh()
     mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
-    mesh.triangles = o3d.utility.Vector3iVector(np.array(tri_ls)-1)
+    mesh.triangles = o3d.utility.Vector3iVector(tri_ls)
     mesh.compute_vertex_normals()
 
     norms = np.array(mesh.vertex_normals)
@@ -218,7 +218,7 @@ def load_mesh(path):
 
 def load_checkpoint(path):
     if path.endswith(".pt") or path.endswith(".pth") or path.endswith(".h5"):
-        return torch.load(path)
+        return torch.load(path, weights_only=True)
     elif path.endswith(".safetensors"):
         tensors = {}
         with safe_open(path, "pt") as f:

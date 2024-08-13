@@ -74,7 +74,7 @@ def farthest_point_sample(xyz, npoint):
     new_offset = torch.arange(1,xyz.shape[0]+1)*npoint
     new_offset = new_offset.cuda().type(torch.int)
     xyz_batch = xyz_batch.contiguous()
-    results = pointops.furthestsampling(xyz_batch, offset, new_offset) 
+    results = pointops.farthest_point_sampling(xyz_batch, offset, new_offset) 
     results = results.reshape(xyz.shape[0], npoint).type(torch.long)
     results = results - (torch.arange(0, xyz.shape[0]).cuda().type(torch.long) * xyz.shape[1]).reshape(-1,1)
 
