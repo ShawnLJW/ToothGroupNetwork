@@ -1,11 +1,17 @@
-from sklearn.cluster import DBSCAN, KMeans
+from sklearn.cluster import (
+    DBSCAN,
+    KMeans,
+    AgglomerativeClustering,
+    MeanShift,
+)
+from sklearn.mixture import GaussianMixture
 import numpy as np
 from sklearn.neighbors import KDTree
-import torch 
-from external_libs.pointnet2_utils.pointnet2_utils import square_distance
-from sklearn.cluster import MeanShift
+import torch
+from pointnet2_utils import square_distance
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+
 
 def clustering_points(moved_points, method, num_of_clusters=None):
     """
@@ -24,24 +30,36 @@ def clustering_points(moved_points, method, num_of_clusters=None):
     cluster_centroids_labels = []
     fg_points_labels_ls = []
     for batch_idx in range(len(moved_points)):
-        if method=="dbscan":
-            clustering = DBSCAN(eps=0.03, min_samples=60).fit(moved_points[batch_idx], 3)
-        elif method=="aggl":
-            clustering = AgglomerativeClustering(num_of_clusters[batch_idx]).fit(moved_points[batch_idx])
-        elif method=="kmeans":
-            clustering = KMeans(num_of_clusters[batch_idx], init="k-means++").fit(moved_points[batch_idx])
-        elif method=="mean_shift":
+        if method == "dbscan":
+            clustering = DBSCAN(eps=0.03, min_samples=60).fit(
+                moved_points[batch_idx], 3
+            )
+        elif method == "aggl":
+            clustering = AgglomerativeClustering(num_of_clusters[batch_idx]).fit(
+                moved_points[batch_idx]
+            )
+        elif method == "kmeans":
+            clustering = KMeans(num_of_clusters[batch_idx], init="k-means++").fit(
+                moved_points[batch_idx]
+            )
+        elif method == "mean_shift":
             clustering = MeanShift(bandwidth=0.05).fit(moved_points[batch_idx])
         else:
-            clustering = GaussianMixture(n_components=num_of_clusters[batch_idx], random_state=0).fit(moved_points[batch_idx])
+            clustering = GaussianMixture(
+                n_components=num_of_clusters[batch_idx], random_state=0
+            ).fit(moved_points[batch_idx])
         unique_labels = np.unique(clustering.labels_)
         fg_points_labels_ls.append(clustering.labels_)
 
         batch_cluster_centroids = []
         batch_cluster_centroids_labels = []
         for label in unique_labels:
-            if(label != -1):
-                batch_cluster_centroids.append(np.mean(moved_points[batch_idx][clustering.labels_==label],axis=0))
+            if label != -1:
+                batch_cluster_centroids.append(
+                    np.mean(
+                        moved_points[batch_idx][clustering.labels_ == label], axis=0
+                    )
+                )
                 batch_cluster_centroids_labels.append(label)
         cluster_centroids.append(batch_cluster_centroids)
         cluster_centroids_labels.append(batch_cluster_centroids_labels)
@@ -50,10 +68,11 @@ def clustering_points(moved_points, method, num_of_clusters=None):
 
 def get_eg_values(points):
     if points.shape[0] < 3:
-        return np.array([0,0,0])
+        return np.array([0, 0, 0])
     pca = PCA(n_components=3)
     pca.fit(points)
     return pca.explained_variance_
+
 
 def find_k_kmeans(x, DEBUG=False):
     inertia_arr = []
@@ -63,16 +82,16 @@ def find_k_kmeans(x, DEBUG=False):
     inertia_arr = np.array(inertia_arr)
     diff_arr = np.diff(inertia_arr)
 
-    flag=False
-    for i in range(diff_arr.shape[0]-2, 0, -1):
-        if (diff_arr[i+1] - diff_arr[i])*6 < diff_arr[i] - diff_arr[i-1]:
-            flag=True
+    flag = False
+    for i in range(diff_arr.shape[0] - 2, 0, -1):
+        if (diff_arr[i + 1] - diff_arr[i]) * 6 < diff_arr[i] - diff_arr[i - 1]:
+            flag = True
             break
         else:
             continue
 
     if flag:
-        k = i+1
+        k = i + 1
     else:
         k = 1
     if DEBUG:
@@ -87,61 +106,74 @@ def get_clustering_labels(moved_points, labels):
     """get cluster labels
 
     Args:
-        moved_points (N, 3): moved points 
+        moved_points (N, 3): moved points
         labels (N, ): labels
     """
     teeth_cond = labels != 0
-    #pd_cond = probs > 0.9
-    
-    super_point_cond = teeth_cond #& pd_cond
+    # pd_cond = probs > 0.9
+
+    super_point_cond = teeth_cond  # & pd_cond
 
     clustering = DBSCAN(eps=0.03, min_samples=30).fit(moved_points[super_point_cond, :])
     clustering_labels = clustering.labels_
     n = clustering_labels.shape[0]
-    
-    clustering_labeled_moved_points = np.concatenate([moved_points[super_point_cond, :] ,clustering_labels.reshape(-1,1)], axis=1) # (N, 4)
-    #gu.print_3d(gu.np_to_pcd_with_label(clustering_labeled_moved_points))
+
+    clustering_labeled_moved_points = np.concatenate(
+        [moved_points[super_point_cond, :], clustering_labels.reshape(-1, 1)], axis=1
+    )  # (N, 4)
+    # gu.print_3d(gu.np_to_pcd_with_label(clustering_labeled_moved_points))
     core_mask = np.full(n, False, dtype=bool)
     core_mask[clustering.core_sample_indices_] = True
     label_points_arr = []
     core_label_points_arr = []
     for label in np.unique(clustering_labels):
-        if label==-1:
+        if label == -1:
             continue
-        label_mask = clustering_labeled_moved_points[:,3]==label
+        label_mask = clustering_labeled_moved_points[:, 3] == label
         label_points_arr.append(clustering_labeled_moved_points[label_mask, :])
-        core_label_points_arr.append(clustering_labeled_moved_points[core_mask & label_mask, :])
+        core_label_points_arr.append(
+            clustering_labeled_moved_points[core_mask & label_mask, :]
+        )
 
     eg_values = []
     for label in label_points_arr:
-        eg_values.append(get_eg_values(label[:,:3]))
+        eg_values.append(get_eg_values(label[:, :3]))
     eg_values = np.array(eg_values)
 
-    eg_values_first_axis = eg_values[:,0]
+    eg_values_first_axis = eg_values[:, 0]
     sorted_idxes = np.argsort(-eg_values_first_axis)
     eg_values_first_axis = eg_values_first_axis[sorted_idxes]
     prb_cluster_num_ls = []
     for i in range(3):
         if eg_values_first_axis[i] / eg_values_first_axis[3:].mean() > 8:
             prb_cluster_num_ls.append(sorted_idxes[i])
-    
+
     for idx, prb_cluster_num in enumerate(prb_cluster_num_ls):
-        cluster_points = label_points_arr[prb_cluster_num][:,:]
-        #cluster_num = find_k_kmeans(cluster_points[:,:3])
-        kmeans = MeanShift(bandwidth=0.07).fit(cluster_points[:,:3])
-        clustering_labels[clustering_labels==prb_cluster_num] = kmeans.labels_+ 100*(idx+1)
-    #core_sample_indices_?
-    tree = KDTree(clustering_labeled_moved_points[clustering_labels!=-1,:3], leaf_size=2)
-    nn_neighbor_idxes = tree.query(clustering_labeled_moved_points[clustering_labels==-1,:3], k=10, return_distance=False)
-    nn_neighbors_labels = clustering_labels[clustering_labels!=-1][nn_neighbor_idxes]
-    
+        cluster_points = label_points_arr[prb_cluster_num][:, :]
+        # cluster_num = find_k_kmeans(cluster_points[:,:3])
+        kmeans = MeanShift(bandwidth=0.07).fit(cluster_points[:, :3])
+        clustering_labels[clustering_labels == prb_cluster_num] = (
+            kmeans.labels_ + 100 * (idx + 1)
+        )
+    # core_sample_indices_?
+    tree = KDTree(
+        clustering_labeled_moved_points[clustering_labels != -1, :3], leaf_size=2
+    )
+    nn_neighbor_idxes = tree.query(
+        clustering_labeled_moved_points[clustering_labels == -1, :3],
+        k=10,
+        return_distance=False,
+    )
+    nn_neighbors_labels = clustering_labels[clustering_labels != -1][nn_neighbor_idxes]
+
     mod_labels = []
     for i in range(nn_neighbors_labels.shape[0]):
         u, c = np.unique(nn_neighbors_labels[i], return_counts=True)
         mod_labels.append(u[np.argmax(c)])
-    clustering_labels[clustering_labels==-1] = np.array(mod_labels) 
+    clustering_labels[clustering_labels == -1] = np.array(mod_labels)
 
     return clustering_labels
+
 
 def get_nearest_neighbor_idx(org_xyz, sampled_clusters, crop_num=4096):
     """
@@ -155,32 +187,35 @@ def get_nearest_neighbor_idx(org_xyz, sampled_clusters, crop_num=4096):
     for batch_idx in range(org_xyz.shape[0]):
         cropped_points = []
 
-        tree = KDTree(org_xyz[batch_idx,:,:], leaf_size=2)
-        indexs = tree.query(sampled_clusters[batch_idx], k=crop_num, return_distance = False)
+        tree = KDTree(org_xyz[batch_idx, :, :], leaf_size=2)
+        indexs = tree.query(
+            sampled_clusters[batch_idx], k=crop_num, return_distance=False
+        )
         cropped_all.append(indexs)
     return cropped_all
 
 
 def centering_object(points):
-    points = points.permute(0,2,1)
+    points = points.permute(0, 2, 1)
     for point in points:
-        point[:,:3] = point[:,:3] - torch.mean(point[:, :3], dim=0)
-    points = points.permute(0,2,1)
+        point[:, :3] = point[:, :3] - torch.mean(point[:, :3], dim=0)
+    points = points.permute(0, 2, 1)
     return points
 
+
 def seg_label_to_cent(gt_coords, gt_seg_label):
-    gt_coords = gt_coords.permute(0,2,1)
-    gt_coords = gt_coords.view(-1,3)
+    gt_coords = gt_coords.permute(0, 2, 1)
+    gt_coords = gt_coords.view(-1, 3)
     gt_seg_label = gt_seg_label.view(-1)
 
     gt_cent_coords = []
     gt_cent_exists = []
     for class_idx in range(0, 16):
-        cls_cond = gt_seg_label==class_idx
-        
+        cls_cond = gt_seg_label == class_idx
+
         cls_sample_xyz = gt_coords[cls_cond, :]
-        if cls_sample_xyz.shape[0]==0:
-            gt_cent_coords.append(torch.from_numpy(np.array([-10,-10,-10])))
+        if cls_sample_xyz.shape[0] == 0:
+            gt_cent_coords.append(torch.from_numpy(np.array([-10, -10, -10])))
             gt_cent_exists.append(torch.zeros(1))
         else:
             centroid = torch.mean(cls_sample_xyz, axis=0)
@@ -189,11 +224,12 @@ def seg_label_to_cent(gt_coords, gt_seg_label):
 
     gt_cent_coords = torch.stack(gt_cent_coords)
     gt_cent_coords = gt_cent_coords.view(1, *gt_cent_coords.shape)
-    gt_cent_coords = gt_cent_coords.permute(0,2,1)
+    gt_cent_coords = gt_cent_coords.permute(0, 2, 1)
     gt_cent_exists = torch.stack(gt_cent_exists)
     gt_cent_exists = gt_cent_exists.view(1, -1)
 
     return gt_cent_coords, gt_cent_exists
+
 
 def get_indexed_features(features, cropped_indexes):
     """
@@ -206,7 +242,7 @@ def get_indexed_features(features, cropped_indexes):
     cropped_item_ls = []
     for b_idx in range(len(cropped_indexes)):
         for cluster_idx in range(len(cropped_indexes[b_idx])):
-            #cropped_point = torch.index_select(features[b_idx,:,:], 1, torch.tensor(cropped_indexes[b_idx][cluster_idx]).cuda())
+            # cropped_point = torch.index_select(features[b_idx,:,:], 1, torch.tensor(cropped_indexes[b_idx][cluster_idx]).cuda())
             cropped_point = features[b_idx][:, cropped_indexes[b_idx][cluster_idx]]
             cropped_item_ls.append(cropped_point)
     if type(cropped_item_ls[0]) == torch.Tensor:
@@ -216,4 +252,3 @@ def get_indexed_features(features, cropped_indexes):
     else:
         raise "someting unknwon type"
     return cropped_item_ls
-
