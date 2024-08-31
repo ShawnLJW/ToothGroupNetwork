@@ -78,6 +78,14 @@ def make_inference_pipeline(model_name, ckpt_path, bdl_ckpt_path=None):
         module.load_state_dict(gu.load_checkpoint(ckpt_path))
         module.cuda()
         return InferencePipeLine(module)
+    elif model_name == "pointmlp":
+        from inference_pipelines.inference_pipeline_sem import InferencePipeLine
+        from models.pointmlp import PointMLP
+
+        module = PointMLP()
+        module.load_state_dict(gu.load_checkpoint(ckpt_path))
+        module.cuda()
+        return InferencePipeLine(module)
     elif model_name == "dgcnn":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.dgcnn import DGCnn
