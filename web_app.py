@@ -10,14 +10,25 @@ import trimesh
 from inference_pipelines.inference_pipeline_maker import make_inference_pipeline
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model_name", default="tgnet", help="tgnet | tsegnet | pointtransformer | pointnetpp | pointnet | dgcnn")
-parser.add_argument("--ckpt", default="ckpts/tgnet_fps.h5", help="Path to the checkpoint file")
-parser.add_argument("--ckpt_bdl", default="ckpts/tgnet_bdl.h5", help="Path to the checkpoint file for tgnet BDL module")
+parser.add_argument(
+    "--model_name",
+    default="tgnet",
+    help="tgnet | tsegnet | pointtransformer | pointnetpp | pointnet | dgcnn",
+)
+parser.add_argument(
+    "--ckpt", default="ckpts/tgnet_fps.h5", help="Path to the checkpoint file"
+)
+parser.add_argument(
+    "--ckpt_bdl",
+    default="ckpts/tgnet_bdl.h5",
+    help="Path to the checkpoint file for tgnet BDL module",
+)
 args = parser.parse_args()
 
 pipeline = make_inference_pipeline(
-    model_name = args.model_name,
-    ckpt_path_ls = [args.ckpt, args.ckpt_bdl],
+    model_name=args.model_name,
+    ckpt_path=args.ckpt,
+    bdl_ckpt_path=args.ckpt_bdl,
 )
 
 FDI_NUMBERING = {
@@ -56,6 +67,7 @@ FDI_NUMBERING = {
     48: "Lower Right Third Molar",
 }
 label_map = np.vectorize(FDI_NUMBERING.get)
+
 
 def get_plotly_mesh(mesh, labels=None):
     triangles = np.asarray(mesh.triangles)
@@ -97,12 +109,13 @@ def get_plotly_mesh(mesh, labels=None):
     )
     return fig
 
+
 @callback(
     Output("mesh-container", "children"),
     Input({"type": "clear-button", "index": ALL}, "n_clicks"),
     Input({"type": "upload-button", "index": ALL}, "contents"),
     State({"type": "upload-button", "index": ALL}, "filename"),
-    prevent_initial_call = True
+    prevent_initial_call=True,
 )
 def update_graph(n_clicks, contents, filename):
     triggered_id = ctx.triggered_id
@@ -110,7 +123,7 @@ def update_graph(n_clicks, contents, filename):
         return read_mesh(contents[0], filename[0])
     else:
         return upload_box()
-    
+
 
 def read_mesh(contents, filename):
     content_type, content_string = contents.split(",")
@@ -124,39 +137,31 @@ def read_mesh(contents, filename):
     graph = dcc.Graph(
         figure=get_plotly_mesh(mesh),
         id={"type": "mesh-object", "index": 0},
-        style={"flex": 1}
+        style={"flex": 1},
     )
-    clear_button = html.Button(
-        "Clear",
-        id={"type": "clear-button", "index": 0}
-    )
-    label_button = html.Button(
-        "Label Teeth",
-        id={"type": "label-button", "index": 0}
-    )
+    clear_button = html.Button("Clear", id={"type": "clear-button", "index": 0})
+    label_button = html.Button("Label Teeth", id={"type": "label-button", "index": 0})
     option_toggles = dcc.Checklist(
-        ["PCA"],
-        inline=True,
-        id={"type": "option-toggles", "index": 0}
+        ["PCA"], inline=True, id={"type": "option-toggles", "index": 0}
     )
     button_row = html.Div(
         [clear_button, label_button, option_toggles],
         style={
-            "display":"flex",
-            "justify-content":"center",
-            "gap":"2rem",
-            "flex": 0
-        }
+            "display": "flex",
+            "justify-content": "center",
+            "gap": "2rem",
+            "flex": 0,
+        },
     )
     return [button_row, graph]
-        
+
 
 @callback(
     Output({"type": "mesh-object", "index": MATCH}, "figure"),
     Input({"type": "label-button", "index": MATCH}, "n_clicks"),
     State({"type": "mesh-object", "index": MATCH}, "figure"),
     State({"type": "option-toggles", "index": MATCH}, "value"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def label_teeth(n_clicks, figure, value):
     plotly_mesh = figure["data"][0]
@@ -166,12 +171,12 @@ def label_teeth(n_clicks, figure, value):
     mesh.vertices = o3d.utility.Vector3dVector(vertex_ls)
     mesh.triangles = o3d.utility.Vector3iVector(tri_ls)
     mesh.compute_vertex_normals()
-    
+
     if value:
-        pca = ("PCA" in value)
+        pca = "PCA" in value
     else:
         pca = False
-        
+
     try:
         outputs = pipeline(mesh, pca)
         labels = np.array(outputs["sem"])
@@ -182,37 +187,39 @@ def label_teeth(n_clicks, figure, value):
         print(e)
         return figure
 
+
 def upload_box():
     return dcc.Upload(
         id={"type": "upload-button", "index": 0},
         children="Drag and Drop or Click to Upload",
         style={
-            "display":"flex",
-            "width":"80vh",
-            "height":"80vh",
+            "display": "flex",
+            "width": "80vh",
+            "height": "80vh",
             "borderWidth": "1px",
             "borderStyle": "dashed",
             "borderRadius": "5px",
-            "justify-content":"center",
-            "align-items":"center",
-            "cursor": "pointer"
+            "justify-content": "center",
+            "align-items": "center",
+            "cursor": "pointer",
         },
     )
+
 
 app = Dash(__name__)
 server = app.server
 app.layout = [
-    html.H1(children="Teeth Segmentation", style={"textAlign":"center"}),
+    html.H1(children="Teeth Segmentation", style={"textAlign": "center"}),
     html.Div(
         upload_box(),
         id="mesh-container",
         style={
-            "display":"flex",
-            "flex-direction":"column",
-            "width":"80vh",
-            "height":"80vh",
+            "display": "flex",
+            "flex-direction": "column",
+            "width": "80vh",
+            "height": "80vh",
             "margin": "auto",
-        }
+        },
     ),
 ]
 

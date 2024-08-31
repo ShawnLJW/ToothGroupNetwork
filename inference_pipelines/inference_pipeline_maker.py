@@ -1,11 +1,14 @@
 import gen_utils as gu
-def make_inference_pipeline(model_name, ckpt_path_ls):
+
+
+def make_inference_pipeline(model_name, ckpt_path, bdl_ckpt_path=None):
     from inference_pipelines.inference_pipeline_tsegnet import InferencePipeLine
     from models.modules.tsegnet import TSegNetModule
-    if model_name=="tsegnet":
+
+    if model_name == "tsegnet":
         inference_config = {
-            "model_info":{
-                "model_parameter" :{
+            "model_info": {
+                "model_parameter": {
                     "input_feat": 6,
                     "stride": [1, 4, 4, 4, 4],
                     "nstride": [2, 2, 2, 2],
@@ -16,18 +19,19 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
                     "crop_sample_size": 3072,
                 },
             },
-            "run_tooth_segmentation_module": True
+            "run_tooth_segmentation_module": True,
         }
 
         module = TSegNetModule(inference_config)
-        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path))
         module.cuda()
         return InferencePipeLine(module)
-    elif model_name=="tgnet":
+    elif model_name == "tgnet":
         from inference_pipelines.inference_pipeline_tgn import InferencePipeLine
+
         inference_config = {
-            "fps_model_info":{
-                "model_parameter" :{
+            "fps_model_info": {
+                "model_parameter": {
                     "input_feat": 6,
                     "stride": [1, 4, 4, 4, 4],
                     "nstride": [2, 2, 2, 2],
@@ -37,11 +41,10 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
                     "planes": [32, 64, 128, 256, 512],
                     "crop_sample_size": 3072,
                 },
-                "load_ckpt_path": ckpt_path_ls[0]
+                "load_ckpt_path": ckpt_path,
             },
-
-            "boundary_model_info":{
-                "model_parameter":{
+            "boundary_model_info": {
+                "model_parameter": {
                     "input_feat": 6,
                     "stride": [1, 1],
                     "nsample": [36, 24],
@@ -50,42 +53,45 @@ def make_inference_pipeline(model_name, ckpt_path_ls):
                     "planes": [16, 32],
                     "crop_sample_size": 3072,
                 },
-                "load_ckpt_path": ckpt_path_ls[1]
+                "load_ckpt_path": bdl_ckpt_path,
             },
-
-            "boundary_sampling_info":{
+            "boundary_sampling_info": {
                 "bdl_ratio": 0.7,
                 "num_of_bdl_points": 20000,
                 "num_of_all_points": 24000,
             },
         }
         return InferencePipeLine(inference_config)
-    elif model_name=="pointnet":
+    elif model_name == "pointnet":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.pointnet import PointNet
+
         module = PointNet()
-        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path))
         module.cuda()
         return InferencePipeLine(module)
-    elif model_name=="pointnetpp":
+    elif model_name == "pointnetpp":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.pointnet_pp import PointNetPp
+
         module = PointNetPp()
-        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path))
         module.cuda()
         return InferencePipeLine(module)
-    elif model_name=="dgcnn":
+    elif model_name == "dgcnn":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.dgcnn import DGCnn
+
         module = DGCnn()
-        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path))
         module.cuda()
         return InferencePipeLine(module)
-    elif model_name=="pointtransformer":
+    elif model_name == "pointtransformer":
         from inference_pipelines.inference_pipeline_sem import InferencePipeLine
         from models.point_transformer import PointTransformer
+
         module = PointTransformer()
-        module.load_state_dict(gu.load_checkpoint(ckpt_path_ls[0]))
+        module.load_state_dict(gu.load_checkpoint(ckpt_path))
         module.cuda()
         return InferencePipeLine(module)
     else:

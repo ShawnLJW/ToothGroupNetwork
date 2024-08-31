@@ -14,14 +14,22 @@ for id in ids:
     for jaw in ["upper", "lower"]:
         scan_list.append(f"data_obj_parent_directory/{id}/{id}_{jaw}.obj")
         gt_list.append(f"data_json_parent_directory/{id}/{id}_{jaw}.json")
-    
+
+
 def evaluate_model(model_name, pca=False):
     print(f"evaluating {model_name}{'' if not pca else '_pca'}")
     if model_name == "tgnet":
-        pipeline = make_inference_pipeline(model_name, ["ckpts/tgnet_fps.h5", "ckpts/tgnet_bdl.h5"])
+        pipeline = make_inference_pipeline(
+            model_name,
+            ckpt_path="ckpts/tgnet_fps.h5",
+            bdl_ckpt_path="ckpts/tgnet_bdl.h5",
+        )
     else:
-        pipeline = make_inference_pipeline(model_name, [f"ckpts/{model_name}.h5"])
-        
+        pipeline = make_inference_pipeline(
+            model_name,
+            ckpt_path=f"ckpts/{model_name}.h5",
+        )
+
     name = f"{model_name}{'' if not pca else '_pca'}"
     model_results = []
 
@@ -29,7 +37,7 @@ def evaluate_model(model_name, pca=False):
         feats, mesh = gu.load_mesh(scan_list[i])
         vertices = feats[:, :3]
         outputs = pipeline(mesh, pca)
-        
+
         gt = gu.load_labels(gt_list[i])
         metrics = calculate_metrics(
             vertices,
@@ -40,13 +48,14 @@ def evaluate_model(model_name, pca=False):
         )
         metrics["file_path"] = scan_list[i]
         model_results.append(metrics)
-    
+
     model_results = pd.DataFrame(model_results)
     model_results.to_csv(f"results_{name}.csv", index=False)
-    
+
     summary_results = {"model_name": name}
     summary_results.update(model_results.mean(numeric_only=True).to_dict())
     return summary_results
+
 
 models = [
     "dgcnn",
@@ -54,5 +63,7 @@ models = [
     "pointnetpp",
     "pointtransformer",
 ]
-results = pd.DataFrame([evaluate_model(model, pca) for model in models for pca in [False, True]])
+results = pd.DataFrame(
+    [evaluate_model(model, pca) for model in models for pca in [False, True]]
+)
 results.to_csv("results.csv", index=False)
