@@ -2,10 +2,10 @@ import gen_utils as gu
 
 
 def make_inference_pipeline(model_name, ckpt_path, bdl_ckpt_path=None):
-    from inference_pipelines.inference_pipeline_tsegnet import InferencePipeLine
-    from models.modules.tsegnet import TSegNetModule
-
     if model_name == "tsegnet":
+        from inference_pipelines.inference_pipeline_tsegnet import InferencePipeLine
+        from models.modules.tsegnet import TSegNetModule
+
         inference_config = {
             "model_info": {
                 "model_parameter": {

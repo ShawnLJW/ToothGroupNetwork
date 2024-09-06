@@ -48,6 +48,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--run_name", type=str)
     parser.add_argument("--model_name", type=str)
+    parser.add_argument("--report_to", type=str, default="wandb")
 
     # augmentation parameters
     parser.add_argument("--scaling_range", nargs="*", type=float, default=[0.85, 1.15])
@@ -90,6 +91,10 @@ if __name__ == "__main__":
         from models.point_transformer import PointTransformer
 
         model = PointTransformer()
+    elif args.model_name == "tgnet":
+        from models.tgn import GroupingNetworkModule
+
+        model = GroupingNetworkModule()
     else:
         raise ValueError(f"Model {args.model_name} not found")
 
@@ -109,9 +114,9 @@ if __name__ == "__main__":
     training_args = TrainingArguments(
         output_dir=save_path,
         eval_strategy="steps",
-        per_device_train_batch_size=4,
-        per_device_eval_batch_size=4,
-        gradient_accumulation_steps=4,
+        per_device_train_batch_size=1,
+        per_device_eval_batch_size=1,
+        gradient_accumulation_steps=16,
         learning_rate=args.learning_rate,
         weight_decay=args.weight_decay,
         lr_scheduler_type=args.lr_schedule,
@@ -119,7 +124,7 @@ if __name__ == "__main__":
         num_train_epochs=args.epochs,
         load_best_model_at_end=True,
         metric_for_best_model="iou",
-        report_to="wandb",
+        report_to=args.report_to,
         run_name=args.run_name,
         logging_steps=50,
     )
