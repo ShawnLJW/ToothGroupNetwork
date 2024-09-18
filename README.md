@@ -8,8 +8,9 @@ This repository provides a collection of models for tooth segmentation on 3D int
 
 - [Setup](#setup)
 - [Models Available](#models-available)
-- [Inference with Python](#inference-with-python)
 - [Training](#training)
+- [Inference](#inference)
+- [Reference Codes](#reference-codes)
 
 ## Setup
 
@@ -32,51 +33,16 @@ conda env create -f environment.yml
 
 ## Models Available
 
+- Tooth Group Network
+- PointMLP
 - Point Transformer
+- DGCNN
 - PointNet++
 - PointNet
 
-## Inference with Python
-
-Teeth segmentation can be performed in Python:
-
-```python
-import gen_utils as gu
-from inference_pipelines.inference_pipeline_maker import make_inference_pipeline
-
-pipeline = make_inference_pipeline(
-    model_name = "tgnet",
-    ckpt_path = "ckpts/tgnet_fps.h5",
-    bdl_ckpt_path = "ckpts/tgnet_bdl.h5"
-)
-
-feats, mesh = gu.load_mesh("input_mesh.obj")
-outputs = pipeline(mesh)
-mesh = gu.get_colored_mesh(mesh, outputs["sem"])
-gu.print_3d(mesh)
-```
-
-The inference pipeline takes in either a mesh object 
-
 ## Training
 
-Start training with the following command:
-
-```bash
-python train.py \
-  --run_name experiment1 \
-  --model_name pointtransformer
-```
-
-By default, models are trained with the AdamW optimizer for 60 epochs with a weight decay of 1e-4. The learning rate starts at 0.001, then decays to 0 with a cosine schedule. The batch size is 16.
-
-For a full list of arguments, enter:
-
-```bash
-python train.py --help
-```
-
-## Dataset
+### Dataset
 
 We created a script to download the dataset used by [Tooth Group Network](https://github.com/limhoyeon/ToothGroupNetwork) from [google drive](https://drive.google.com/drive/u/1/folders/15oP0CZM_O_-Bir18VbSM8wRUEzoyLXby).
 
@@ -106,141 +72,59 @@ and so on..
 and so on..
 ```
 
-If you have your dental mesh data, you can use it.
+To use your own data:
 
-- In such cases, you need to adhere to the data name format(casename_upper.obj or casename_lower.obj).
+- Adhere to the data name format(casename_upper.obj or casename_lower.obj) and file structure.
 - All axes must be aligned as shown in the figure below. Note that the Y-axis points towards the back direction(plz note that both lower jaw and upper jaw have the same z-direction!).
   
 <img src="https://user-images.githubusercontent.com/70117866/233266358-1f7139ff-3921-44d8-b5bf-1461645de2b3.png" width="600" height="400">
-  
-# Training
 
-## Preprocessing
+### Preprocessing
 
-- For training, you have to execute the `preprocess_data.py` to save the farthest point sampled vertices of the mesh (.obj) files.
-- Here is an example of how to execute `preprocess_data.py`.
+Once the data is downloaded, run the following script to save the sampled points from each mesh:
 
-```{bash}
-python preprocess_data.py \
---source_obj_data_path data_obj_parent_directory \
---source_json_data_path data_json_parent_directory
+```bash
+python preprocess_data.py
 ```
 
+Points sampled with farthest point sampling will be saved to `data_preprocessed_path` and points sampled with boundary aware sampling will be saved to `data_bdl_path`.
 
-### 1. tgnet(Ours)
+### Training Script
 
-- The tgnet is our 3d tooth segmentation method. Please refer to the [challenge paper]() for an explanation of the methodology.
-- You should first train the Farthest Point Sampling model and then train the Boundary Aware Point Sampling model.
-- First, train the Farthest Point Sampling model as follows.
-  ```
-  start_train.py \
-   --model_name "tgnet_fps" \
-   --config_path "train_configs/tgnet_fps.py" \
-   --experiment_name "your_experiment_name" \
-   --input_data_dir_path "data_preprocessed_path" \
-   --train_data_split_txt_path "base_name_train_fold.txt" \
-   --val_data_split_txt_path "base_name_val_fold.txt"
-  ```
-  - Input the preprocessed data directory path into the `--input_data_dir_path`.
-  - You can provide the train/validation split text files through `--train_data_split_txt_path` and `--val_data_split_txt_path`. You can either use the provided text files from the above dataset drive link(`base_name_*_fold.txt`) or create your own text files for the split.
-- To train the Boundary Aware Point Sampling model, please modify the following four configurations in `train_configs/tgnet_bdl.py`: `original_data_obj_path`, `original_data_json_path`, `bdl_cache_path`, and `load_ckpt_path`.
-  ![image](https://github.com/limhoyeon/ToothGroupNetwork/assets/70117866/f4fc118e-6051-46a9-9862-d52f3d4ba2b9)
-- After modifying the configurations, train the Boundary Aware Point Sampling model as follows.
-  ```
-  start_train.py \
-   --model_name "tgnet_bdl" \
-   --config_path "train_configs/tgnet_bdl.py" \
-   --experiment_name "your_experiment_name" \
-   --input_data_dir_path "path/to/save/preprocessed_data" \
-   --train_data_split_txt_path "base_name_train_fold.txt" \
-   --val_data_split_txt_path "base_name_val_fold.txt"
-  ```
+Start training with the following command:
 
-### 2. tsegnet
-
-- This is the implementation of model . Please refer to the paper for detail.
-- First, The centroid prediction module has to be trained first in tsegnet. To train the centroid prediction module, please modify the `run_tooth_seg_mentation_module` parameter to False in the `train_configs/tsegnet.py` file.
-  ![image](https://github.com/limhoyeon/ToothGroupNetwork/assets/70117866/c37eb2ac-b36d-4ca9-a014-b785fd556c35)
-- And train the centroid prediction module by entering the following command.
-  ```
-  start_train.py \
-   --model_name "tsegnet" \
-   --config_path "train_configs/tsegnet.py" \
-   --experiment_name "your_experiment_name" \
-   --input_data_dir_path "path/to/save/preprocessed_data" \
-   --train_data_split_txt_path "base_name_train_fold.txt" \
-   --val_data_split_txt_path "base_name_val_fold.txt"
-  ```
-- Once the training of the centroid prediction module is completed, please update the `pretrained_centroid_model_path` in `train_configs/tsegnet.py` with the checkpoint path of the trained centroid prediction module. Also, set `run_tooth_segmentation_module` to True.
-- And please train the tsegnet model by entering the following command.
-  ```
-  start_train.py \
-   --model_name "tsegnet" \
-   --config_path "train_configs/tsegnet.py" \
-   --experiment_name "your_experiment_name" \
-   --input_data_dir_path "path/to/save/preprocessed_data" \
-   --train_data_split_txt_path "base_name_train_fold.txt" \
-   --val_data_split_txt_path "base_name_val_fold.txt"
-  ```
-
-
-### 3. pointnet | pointnetpp | dgcnn | pointtransformer
-
-- [pointnet](https://arxiv.org/abs/1612.00593) | [pointnet++](http://stanford.edu/~rqi/pointnet2/) | [dgcnn](https://liuziwei7.github.io/projects/DGCNN) | [pointtransformer](https://arxiv.org/abs/2012.09164)
-- This model directly applies the point cloud segmentation method to tooth segmentation.
-- train models by entering the following command.
-  ```
-  start_train.py \
-   --model_name "pointnet" \
-   --config_path "train_configs/pointnet.py" \
-   --experiment_name "your_experiment_name" \
-   --input_data_dir_path "path/to/save/preprocessed_data" \
-   --train_data_split_txt_path "base_name_train_fold.txt" \
-   --val_data_split_txt_path "base_name_val_fold.txt"
-  ```
-
-
-# Inference
-- To test the performance of the model used in the challenge, please switch to the challenge_branch (refer to the notice at the top).
-- We offer six models(tsegnet | tgnet(ours) | pointnet | pointnetpp | dgcnn | pointtransformer).
-- All of the checkpoint files for each model are in (https://drive.google.com/drive/folders/15oP0CZM_O_-Bir18VbSM8wRUEzoyLXby?usp=sharing). Download ckpts(new).zip and unzip all of the checkpoints.
-- Inference with tsegnet / pointnet / pointnetpp / dgcnn / pointtransformer
-  ```
-  python start_inference.py \
-   --input_dir_path obj/file/parent/path \
-   --split_txt_path base_name_test_fold.txt \
-   --save_path path/to/save/results \
-   --model_name tgnet_fps \
-   --checkpoint_path your/model/checkpoint/path
-  ```
-- Inference with tgnet(ours)
-
-```
-python start_inference.py \
-  --input_dir_path obj/file/parent/path \
-  --split_txt_path base_name_test_fold.txt \
-  --save_path path/to/save/results \
-  --model_name tgnet_fps \
-  --checkpoint_path your/tgnet_fps/checkpoint/path
-  --checkpoint_path_bdl your/tgnet_bdl/checkpoint/path
+```bash
+python train.py \
+  --run_name tgnet_run_1 \
+  --model_name tgnet
 ```
 
-- Please input the parent path of the original mesh obj files instead of the preprocessed sampling points in `--input_data_dir_path` for training. The inference process will handle the farthest point sampling internally.
-- For `split_txt_path`, provide the test split fold's casenames in the same format as used during training.
-- Predicted results are saved in save_path like below... It has the same format as the ground truth json file.
+model_name accepts the following values:
 
+- tgnet
+- tgnet_bdl
+- pointtransformer
+- pointmlp
+- pointnetpp
+- pointnet
+- dgcnn
+
+For tooth group network, there are 2 modules that needs to be trained separately. After training the module for farthest point sampling, train the boundary aware sampling module with:
+
+```bash
+python train.py \
+  --run_name tgnet_bdl_run_1 \
+  --model_name tgnet_bdl \
+  --input_data_dir data_bdl_path
 ```
---save_path
-----00OMSZGW_lower.json
-----00OMSZGW_upper.json
-----0EAKT1CU_lower.json
-----0EAKT1CU_upper.json
-and so on...
+
+By default, models are trained with the AdamW optimizer for 60 epochs with a weight decay of 1e-4. The learning rate starts at 0.001, then decays to 0 with a cosine schedule. The batch size is 16. These parameters can be changed by running the script with arguments. For a full list of arguments, enter:
+
+```bash
+python train.py --help
 ```
 
-- the inference config in "inference_pipelines.infenrece_pipeline_maker.py" has to be the same as the model of the train config. If you change the train config, then you have to change the inference config.
-
-# Test results
+### Provided Checkpoints
 
 - The checkpoints we provided were trained for 60 epochs using the train-validation split provided in the dataset drive link(`base_name_train_fold.txt`, `base_name_val_fold.txt`). The results obtained using the test split(`base_name_test_fold.txt`) are as follows
   
@@ -252,32 +136,72 @@ and so on...
 
   ![image](https://github.com/limhoyeon/ToothGroupNetwork/assets/70117866/2d771b98-435c-49a6-827c-a85ab5bed6e2)
 
-# Evaulation & Visualization
+## Inference
 
-- We provide the evaluation and visualization code.
-- You can execute the following code to test on a pair of obj/gt json file:
+Pretrained checkpoints are available on [Google Drive](https://drive.google.com/drive/folders/15oP0CZM_O_-Bir18VbSM8wRUEzoyLXby?usp=sharing). Download and unzip `ckpts(new).zip`.
 
-```
-eval_visualize_results.py \
-  --mesh_path path/to/obj_file \ 
-  --gt_json_path path/to/gt_json_file \
-  --pred_json_path path/to/predicted_json_file(a result of inference code)
-```
+### Web Application
 
-- With just a few modifications to the provided code, you can write code to test all the results.
+![web ui image](assets/webui.png)
 
-# Installation
+Run a web UI made with plotly with:
 
-- Installtion is tested on pytorch/pytorch:1.7.1-cuda11.0-cudnn8-devel(ubuntu, pytorch 1.7.1) docker image.
-- It can be installed on other OS(window, etc..)
-- There are some issues with RTX40XX graphic cards. plz report in issue board.
-- if you have any issues while installing pointops library, please install another pointops library source in (https://github.com/POSTECH-CVLab/point-transformer).
-
-```{bash}
-pip install -r requirements.txt
+```bash
+python web_app.py
 ```
 
-# Reference codes
+By default, the app runs tgnet. But you can choose to use other models:
+
+```bash
+python web_app.py \
+    --model_name pointtransformer
+    --ckpt ckpts/pointtransformer.h5
+```
+
+### Provided Scripts
+
+`eval_visualize_results.py` takes a OBJ/STL file and displays the coloured mesh. Optionally, if a label file is provided, metrics would also be printed:
+
+```bash
+python eval_visualize_results.py \
+    --input_path example.obj \
+    --labels_path example.json
+```
+
+You can set the model used through parameters:
+
+```bash
+python eval_visualize_results.py \
+    --input_path example.obj \
+    --labels_path example.json \
+    --model_name tgnet \
+    --ckpt ckpts/tgnet_fps.h5 \
+    --ckpt_bdl ckpts/tgnet_bdl.h5
+```
+
+### DIY Scripts
+
+If you want to perform teeth segmentation in your own scripts, a pipeline object is provided:
+
+```python
+import gen_utils as gu
+from inference_pipelines.inference_pipeline_maker import make_inference_pipeline
+
+pipeline = make_inference_pipeline(
+    model_name = "tgnet",
+    ckpt_path = "ckpts/tgnet_fps.h5",
+    bdl_ckpt_path = "ckpts/tgnet_bdl.h5"
+)
+
+feats, mesh = gu.load_mesh("input_mesh.obj")
+outputs = pipeline(mesh)
+mesh = gu.get_colored_mesh(mesh, outputs["sem"])
+gu.print_3d(mesh)
+```
+
+The inference pipeline takes in either a mesh object or a string containing the path to a OBJ/STL file and returns a dictionary containing the results.
+
+## Reference codes
 
 - https://github.com/LiyaoTang/contrastBoundary.git
 - https://github.com/yanx27/Pointnet_Pointnet2_pytorch
